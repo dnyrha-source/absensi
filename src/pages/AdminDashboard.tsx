@@ -36,7 +36,7 @@ export default function AdminDashboard() {
   // Modal States
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [viewingUser, setViewingUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [_isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -578,7 +578,7 @@ export default function AdminDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {logs.filter(l => l.userId === viewingUser.id).slice(0, 5).map((l, i) => (
+                      {logs.filter(l => l.userId === viewingUser.id).slice(0, 5).map((l) => (
                         <tr key={l.id} className="border-b border-gray-50 dark:border-slate-800 last:border-0 hover:bg-gray-50 dark:hover:bg-slate-800/50">
                           <td className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">
                             {new Date(l.timestamp).toLocaleDateString()}

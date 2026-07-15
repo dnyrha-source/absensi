@@ -4,7 +4,9 @@ export const loadModels = async () => {
   const MODEL_URL = '/models';
   try {
     // Initialize TensorFlow.js backend
+    // @ts-ignore
     await faceapi.tf.setBackend('webgl');
+    // @ts-ignore
     await faceapi.tf.ready();
     
     await Promise.all([

@@ -1,5 +1,5 @@
 import { Link, Outlet } from 'react-router-dom';
-import { BookOpen, LayoutDashboard, ScanFace } from 'lucide-react';
+import { LayoutDashboard, ScanFace } from 'lucide-react';
 
 export default function Layout() {
   return (

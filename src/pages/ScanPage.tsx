@@ -98,7 +98,7 @@ export default function ScanPage() {
         let foundUser: User | null = null;
         let minDistance = 0.5; // Slightly stricter threshold
 
-        usersList.forEach((user: User) => {
+        for (const user of usersList) {
           if (user.faceEmbedding) {
             const distance = faceapi.euclideanDistance(
               descriptor, 
@@ -109,7 +109,7 @@ export default function ScanPage() {
               foundUser = user;
             }
           }
-        });
+        }
 
         if (!foundUser) {
           navigate('/register', { state: { faceEmbedding: Array.from(descriptor) } });
