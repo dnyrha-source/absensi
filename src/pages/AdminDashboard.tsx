@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, User as UserIcon, GraduationCap, Building2, Briefcase, FileSpreadsheet, Edit, Trash2, X, BarChart3 } from 'lucide-react';
+import { Users, User as UserIcon, GraduationCap, Building2, Briefcase, FileSpreadsheet, Edit, Trash2, X, BarChart3, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getUsers, getLogs, updateUser, deleteUser } from '../lib/db';
 import type { User, AttendanceLog } from '../lib/db';
 
@@ -10,6 +10,11 @@ export default function AdminDashboard() {
 
   // Tab State
   const [activeTab, setActiveTab] = useState<'logs' | 'users'>('logs');
+
+  // Pagination States
+  const [logPage, setLogPage] = useState(1);
+  const [userPage, setUserPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
 
   // Data States
   const [users, setUsers] = useState<User[]>([]);
@@ -141,6 +146,13 @@ export default function AdminDashboard() {
   const maxHourlyVisits = Math.max(...hourlyData, 1);
   const displayHours = [6,7,8,9,10,11,12,13,14,15,16,17,18];
 
+  // --- PAGINATION LOGIC ---
+  const totalLogPages = Math.ceil(finalLogs.length / ITEMS_PER_PAGE);
+  const currentLogs = finalLogs.slice((logPage - 1) * ITEMS_PER_PAGE, logPage * ITEMS_PER_PAGE);
+
+  const totalUserPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
+  const currentUsers = filteredUsers.slice((userPage - 1) * ITEMS_PER_PAGE, userPage * ITEMS_PER_PAGE);
+
   // --- ACTIONS ---
   const handleExportCSV = () => {
     if (finalLogs.length === 0) return alert('Tidak ada data untuk diexport');
@@ -260,7 +272,7 @@ export default function AdminDashboard() {
               <input 
                 type="date" 
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                onChange={(e) => { setStartDate(e.target.value); setLogPage(1); }}
                 className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg outline-none text-sm text-gray-800 dark:text-gray-200"
               />
             </div>
@@ -269,7 +281,7 @@ export default function AdminDashboard() {
               <input 
                 type="date" 
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                onChange={(e) => { setEndDate(e.target.value); setLogPage(1); }}
                 className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg outline-none text-sm text-gray-800 dark:text-gray-200"
               />
             </div>
@@ -277,7 +289,7 @@ export default function AdminDashboard() {
               <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Kategori</label>
               <select 
                 value={kategoriFilter}
-                onChange={(e) => setKategoriFilter(e.target.value)}
+                onChange={(e) => { setKategoriFilter(e.target.value); setLogPage(1); }}
                 className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg outline-none text-sm text-gray-800 dark:text-gray-200"
               >
                 <option value="Semua">Semua Kategori</option>
@@ -292,7 +304,7 @@ export default function AdminDashboard() {
               <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Cari Kelas</label>
               <select 
                 value={kelasFilter}
-                onChange={(e) => setKelasFilter(e.target.value)}
+                onChange={(e) => { setKelasFilter(e.target.value); setLogPage(1); }}
                 className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg outline-none text-sm text-gray-800 dark:text-gray-200"
               >
                 <option value="">Semua Kelas</option>
@@ -403,8 +415,8 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {finalLogs.length > 0 ? (
-                    finalLogs.map((l, idx) => (
+                  {currentLogs.length > 0 ? (
+                    currentLogs.map((l, idx) => (
                       <tr key={idx} className="border-b border-gray-50 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors">
                         <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                           {new Date(l.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - {new Date(l.timestamp).toLocaleDateString()}
@@ -433,6 +445,31 @@ export default function AdminDashboard() {
                 </tbody>
               </table>
             </div>
+            
+            {/* Pagination Controls Logs */}
+            {totalLogPages > 1 && (
+              <div className="p-4 border-t border-gray-100 dark:border-slate-700 flex justify-between items-center bg-gray-50 dark:bg-slate-900/30">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Menampilkan {((logPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(logPage * ITEMS_PER_PAGE, finalLogs.length)} dari {finalLogs.length} data
+                </p>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => setLogPage(p => Math.max(1, p - 1))} 
+                    disabled={logPage === 1}
+                    className="p-1 rounded-md border border-gray-300 dark:border-slate-600 disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-slate-800"
+                  >
+                    <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                  </button>
+                  <button 
+                    onClick={() => setLogPage(p => Math.min(totalLogPages, p + 1))}
+                    disabled={logPage === totalLogPages}
+                    className="p-1 rounded-md border border-gray-300 dark:border-slate-600 disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-slate-800"
+                  >
+                    <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </>
       )}
@@ -445,7 +482,7 @@ export default function AdminDashboard() {
               type="text"
               placeholder="Cari nama siswa/pengunjung..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => { setSearchQuery(e.target.value); setUserPage(1); }}
               className="px-4 py-2 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg outline-none text-sm text-gray-800 dark:text-gray-200 min-w-[250px]"
             />
           </div>
@@ -462,8 +499,8 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.length > 0 ? (
-                  filteredUsers.map((u) => (
+                {currentUsers.length > 0 ? (
+                  currentUsers.map((u) => (
                     <tr key={u.id} className="border-b border-gray-50 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors">
                       <td className="px-6 py-4 text-sm font-medium text-primary cursor-pointer hover:underline" onClick={() => setViewingUser(u)}>
                         {u.nama}
@@ -502,6 +539,31 @@ export default function AdminDashboard() {
               </tbody>
             </table>
           </div>
+          
+          {/* Pagination Controls Users */}
+          {totalUserPages > 1 && (
+            <div className="p-4 border-t border-gray-100 dark:border-slate-700 flex justify-between items-center bg-gray-50 dark:bg-slate-900/30">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Menampilkan {((userPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(userPage * ITEMS_PER_PAGE, filteredUsers.length)} dari {filteredUsers.length} data
+              </p>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => setUserPage(p => Math.max(1, p - 1))} 
+                  disabled={userPage === 1}
+                  className="p-1 rounded-md border border-gray-300 dark:border-slate-600 disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-slate-800"
+                >
+                  <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                </button>
+                <button 
+                  onClick={() => setUserPage(p => Math.min(totalUserPages, p + 1))}
+                  disabled={userPage === totalUserPages}
+                  className="p-1 rounded-md border border-gray-300 dark:border-slate-600 disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-slate-800"
+                >
+                  <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
