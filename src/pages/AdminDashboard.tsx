@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, User as UserIcon, GraduationCap, Building2, Briefcase, FileSpreadsheet, Edit, Trash2, X } from 'lucide-react';
+import { Users, User as UserIcon, GraduationCap, Building2, Briefcase, FileSpreadsheet, Edit, Trash2, X, BarChart3 } from 'lucide-react';
 import { getUsers, getLogs, updateUser, deleteUser } from '../lib/db';
 import type { User, AttendanceLog } from '../lib/db';
 
@@ -131,6 +131,15 @@ export default function AdminDashboard() {
 
   // Search filter for Users Tab
   const filteredUsers = users.filter(u => u.nama.toLowerCase().includes(searchQuery.toLowerCase()));
+
+  // --- BUSY HOURS CALCULATION ---
+  const hourlyData = Array(24).fill(0);
+  finalLogs.forEach(log => {
+    const hour = new Date(log.timestamp).getHours();
+    hourlyData[hour]++;
+  });
+  const maxHourlyVisits = Math.max(...hourlyData, 1);
+  const displayHours = [6,7,8,9,10,11,12,13,14,15,16,17,18];
 
   // --- ACTIONS ---
   const handleExportCSV = () => {
@@ -304,6 +313,39 @@ export default function AdminDashboard() {
             <StatCard title="Guru" value={stats.guru} icon={<GraduationCap className="w-8 h-8 text-orange-500" />} color="bg-orange-500 text-orange-500" />
             <StatCard title="Karyawan" value={stats.karyawan} icon={<Building2 className="w-8 h-8 text-teal-500" />} color="bg-teal-500 text-teal-500" />
             <StatCard title="Pimpinan" value={stats.pimpinan} icon={<Briefcase className="w-8 h-8 text-rose-500" />} color="bg-rose-500 text-rose-500" />
+          </div>
+
+          {/* Busy Hours Chart Section */}
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 shadow-sm overflow-hidden mb-8">
+            <div className="p-6 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-primary" />
+                Statistik Jam Sibuk (06:00 - 18:00)
+              </h3>
+            </div>
+            <div className="p-6">
+              <div className="flex items-end h-48 gap-2 w-full overflow-x-auto pb-2">
+                {displayHours.map(hour => {
+                  const count = hourlyData[hour];
+                  const heightPercentage = (count / maxHourlyVisits) * 100;
+                  return (
+                    <div key={hour} className="flex-1 flex flex-col justify-end items-center min-w-[30px] group cursor-pointer">
+                      <div className="text-xs font-bold text-primary mb-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {count > 0 ? count : ''}
+                      </div>
+                      <div 
+                        className="w-full max-w-[40px] bg-blue-100 dark:bg-blue-900/40 hover:bg-primary dark:hover:bg-primary rounded-t-md transition-all duration-300 ease-in-out relative group-hover:shadow-[0_0_10px_rgba(59,130,246,0.5)]"
+                        style={{ height: `${heightPercentage}%`, minHeight: count > 0 ? '4px' : '0' }}
+                      >
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-2 font-medium">
+                        {hour.toString().padStart(2, '0')}:00
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
           <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 shadow-sm overflow-hidden mb-8">
