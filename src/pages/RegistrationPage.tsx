@@ -22,7 +22,12 @@ export default function RegistrationPage() {
 
   const { register, handleSubmit, watch, formState: { errors } } = useForm<RegistrationForm>({
     defaultValues: {
-      kategori: ''
+      kategori: '',
+      jenjang: '',
+      kelas: '',
+      unit: '',
+      bagian: '',
+      jabatan: ''
     }
   });
 
