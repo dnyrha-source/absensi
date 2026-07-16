@@ -147,8 +147,8 @@ export default function AdminDashboard() {
     const hour = new Date(log.timestamp).getHours();
     hourlyData[hour]++;
   });
-  const maxHourlyVisits = Math.max(...hourlyData, 1);
   const displayHours = [6,7,8,9,10,11,12,13,14,15,16,17,18];
+  const maxHourlyVisits = Math.max(...displayHours.map(h => hourlyData[h]), 1);
 
   // --- PAGINATION LOGIC ---
   const totalLogPages = Math.ceil(finalLogs.length / ITEMS_PER_PAGE);
@@ -355,16 +355,17 @@ export default function AdminDashboard() {
                   const count = hourlyData[hour];
                   const heightPercentage = (count / maxHourlyVisits) * 100;
                   return (
-                    <div key={hour} className="flex-1 flex flex-col justify-end items-center min-w-[30px] group cursor-pointer">
-                      <div className="text-xs font-bold text-primary mb-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div key={hour} className="flex-1 h-full flex flex-col justify-end items-center min-w-[30px] group cursor-pointer">
+                      <div className="text-xs font-bold text-primary mb-1 opacity-0 group-hover:opacity-100 transition-opacity h-4">
                         {count > 0 ? count : ''}
                       </div>
-                      <div 
-                        className="w-full max-w-[40px] bg-blue-100 dark:bg-blue-900/40 hover:bg-primary dark:hover:bg-primary rounded-t-md transition-all duration-300 ease-in-out relative group-hover:shadow-[0_0_10px_rgba(59,130,246,0.5)]"
-                        style={{ height: `${heightPercentage}%`, minHeight: count > 0 ? '4px' : '0' }}
-                      >
+                      <div className="w-full flex-1 flex items-end justify-center">
+                        <div 
+                          className="w-full max-w-[40px] bg-blue-100 dark:bg-blue-900/40 hover:bg-primary dark:hover:bg-primary rounded-t-md transition-all duration-300 ease-in-out relative group-hover:shadow-[0_0_10px_rgba(59,130,246,0.5)]"
+                          style={{ height: `${heightPercentage}%`, minHeight: count > 0 ? '4px' : '0' }}
+                        ></div>
                       </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-2 font-medium">
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-2 font-medium h-4">
                         {hour.toString().padStart(2, '0')}:00
                       </div>
                     </div>
