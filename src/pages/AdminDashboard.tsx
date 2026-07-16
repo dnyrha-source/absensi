@@ -37,6 +37,7 @@ export default function AdminDashboard() {
   
   // Master Data Search
   const [searchQuery, setSearchQuery] = useState('');
+  const [logSearchQuery, setLogSearchQuery] = useState('');
   
   // Modal States
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -111,6 +112,9 @@ export default function AdminDashboard() {
   }
   if (kelasFilter.trim() !== '') {
     finalLogs = finalLogs.filter(l => l.user?.kelas?.toLowerCase().includes(kelasFilter.toLowerCase()));
+  }
+  if (logSearchQuery.trim() !== '') {
+    finalLogs = finalLogs.filter(l => l.user?.nama?.toLowerCase().includes(logSearchQuery.toLowerCase()));
   }
 
   // Stats
@@ -266,7 +270,17 @@ export default function AdminDashboard() {
       {activeTab === 'logs' && (
         <>
           {/* Filter Section */}
-          <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-gray-100 dark:border-slate-700 shadow-sm mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-gray-100 dark:border-slate-700 shadow-sm mb-6 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Cari Nama</label>
+              <input 
+                type="text"
+                placeholder="Ketik nama..."
+                value={logSearchQuery}
+                onChange={(e) => { setLogSearchQuery(e.target.value); setLogPage(1); }}
+                className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg outline-none text-sm text-gray-800 dark:text-gray-200"
+              />
+            </div>
             <div>
               <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Dari Tanggal</label>
               <input 
