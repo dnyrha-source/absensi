@@ -9,7 +9,15 @@ import * as faceapi from '@vladmandic/face-api';
 export default function ScanPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isModelsLoaded, setIsModelsLoaded] = useState(false);
-  const [isScanning, setIsScanning] = useState(false);
+  
+  // Status states
+  const [scanStatus, setScanStatus] = useState<'idle' | 'active' | 'cooldown' | 'unregistered'>('idle');
+  const [unregisteredFace, setUnregisteredFace] = useState<Float32Array | null>(null);
+  
+  const isScanningRef = useRef(false);
+  const successDataRef = useRef<{name: string, time: string} | null>(null);
+  const unregisteredFaceRef = useRef<Float32Array | null>(null);
+  const cooldowns = useRef(new Map<string, number>());
   
   // State for success modal
   const [successData, setSuccessData] = useState<{name: string, time: string} | null>(null);
@@ -83,20 +91,53 @@ export default function ScanPage() {
     }
   };
 
-  const handleScan = async () => {
-    if (!videoRef.current || !isModelsLoaded || isScanning) return;
+  // Sync refs
+  useEffect(() => { successDataRef.current = successData; }, [successData]);
+  useEffect(() => { unregisteredFaceRef.current = unregisteredFace; }, [unregisteredFace]);
+
+  useEffect(() => {
+    if (!isModelsLoaded) return;
     
-    if (videoRef.current.videoWidth === 0 || videoRef.current.videoHeight === 0) {
-      alert("Kamera belum siap, silakan tunggu sebentar.");
-      return;
-    }
+    let active = true;
+    const scanLoop = async () => {
+      if (!active) return;
+      
+      // Only scan if not currently scanning, showing success, or showing unregistered modal
+      if (!isScanningRef.current && !successDataRef.current && !unregisteredFaceRef.current) {
+        await handleAutoScan();
+      }
+      
+      // Wait 1 second before next poll
+      setTimeout(scanLoop, 1000);
+    };
     
-    setIsScanning(true);
+    scanLoop();
+    
+    return () => { active = false; };
+  }, [isModelsLoaded, usersList]);
+
+  const handleAutoScan = async () => {
+    if (!videoRef.current || videoRef.current.videoWidth === 0) return;
+    
     try {
+      // 1. Lightweight detection first (Idle mode)
+      const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
+      const detection = await faceapi.detectSingleFace(videoRef.current, options);
+      
+      if (!detection) {
+        setScanStatus('idle');
+        return; // No face found, go back to idle
+      }
+      
+      // Face found! Switch to active mode
+      setScanStatus('active');
+      isScanningRef.current = true;
+      
+      // 2. Heavy extraction
       const descriptor = await getFaceEmbedding(videoRef.current);
       if (descriptor) {
         let foundUser: User | null = null;
-        let minDistance = 0.5; // Slightly stricter threshold
+        let minDistance = 0.5; 
 
         for (const user of usersList) {
           if (user.faceEmbedding) {
@@ -112,8 +153,18 @@ export default function ScanPage() {
         }
 
         if (!foundUser) {
-          navigate('/register', { state: { faceEmbedding: Array.from(descriptor) } });
+          setUnregisteredFace(new Float32Array(descriptor));
+          setScanStatus('unregistered');
         } else {
+          // Check cooldown (60 seconds)
+          const lastScanTime = cooldowns.current.get(foundUser.id);
+          if (lastScanTime && Date.now() - lastScanTime < 60000) {
+            setScanStatus('cooldown');
+            isScanningRef.current = false;
+            return; // Skip logging
+          }
+          
+          cooldowns.current.set(foundUser.id, Date.now());
           await addLog(foundUser.id);
           playSuccessSound();
           setSuccessData({
@@ -121,19 +172,16 @@ export default function ScanPage() {
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           });
           
-          // Auto close after 4 seconds
           setTimeout(() => {
             setSuccessData(null);
-          }, 4000);
+            setScanStatus('idle');
+          }, 3000);
         }
-      } else {
-        alert('Wajah tidak terdeteksi. Pastikan pencahayaan cukup dan wajah terlihat jelas.');
       }
     } catch (error: any) {
-      alert("Terjadi kesalahan saat mendeteksi wajah: " + error.message);
-      console.error(error);
+      console.error("Terjadi kesalahan saat mendeteksi wajah: ", error);
     } finally {
-      setIsScanning(false);
+      isScanningRef.current = false;
     }
   };
 
@@ -192,32 +240,56 @@ export default function ScanPage() {
         <div className="absolute bottom-0 right-0 w-12 h-12 md:w-16 md:h-16 border-b-4 border-r-4 border-primary dark:border-blue-400 rounded-br-2xl z-20 m-6 opacity-80 transition-all duration-300 group-hover:scale-110"></div>
 
         {/* Laser Scanner Effect */}
-        {isScanning && (
+        {(scanStatus === 'active') && (
           <div className="absolute inset-0 z-30 pointer-events-none overflow-hidden">
             <div className="w-full h-1 bg-blue-500 shadow-[0_0_20px_5px_rgba(59,130,246,0.8)] absolute animate-scan-line"></div>
           </div>
         )}
+
+        {/* Unregistered Face Overlay */}
+        {unregisteredFace && (
+          <div className="absolute inset-0 z-40 bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center animate-popup">
+            <div className="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mb-4 shadow-inner">
+              <span className="text-3xl">🤔</span>
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">Wajah Belum Terdaftar</h3>
+            <p className="text-slate-300 text-sm mb-6">Sistem tidak mengenali wajah ini. Apakah Anda ingin mendaftar?</p>
+            <div className="flex flex-col w-full gap-3">
+              <button 
+                onClick={() => navigate('/register', { state: { faceEmbedding: Array.from(unregisteredFace) } })}
+                className="w-full py-3 bg-primary hover:bg-blue-600 text-white rounded-xl font-bold shadow-lg transition-all active:scale-95"
+              >
+                Klik Untuk Registrasi
+              </button>
+              <button 
+                onClick={() => { setUnregisteredFace(null); setScanStatus('idle'); }}
+                className="w-full py-3 border border-slate-500 text-slate-300 hover:bg-slate-800 rounded-xl font-bold transition-all active:scale-95"
+              >
+                Batal / Lewati
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
-      <button 
-        onClick={handleScan}
-        disabled={!isModelsLoaded || isScanning}
-        className={`flex items-center gap-3 px-10 py-4 font-bold rounded-full text-base md:text-lg shadow-xl transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed
-          ${isScanning ? 'bg-slate-700 text-white animate-pulse' : 'bg-gradient-to-r from-primary to-blue-500 hover:from-blue-600 hover:to-blue-500 text-white shadow-primary/30 hover:shadow-primary/50'}
-        `}
-      >
-        {isScanning ? (
+      <div className={`flex items-center gap-3 px-8 py-3 font-bold rounded-full text-base shadow-lg transition-all ${scanStatus === 'active' ? 'bg-blue-500 text-white animate-pulse' : scanStatus === 'cooldown' ? 'bg-amber-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}`}>
+        {scanStatus === 'active' ? (
           <>
-            <RefreshCw className="w-6 h-6 animate-spin" />
-            <span>Memindai Wajah...</span>
+            <RefreshCw className="w-5 h-5 animate-spin" />
+            <span>Menganalisa Wajah...</span>
+          </>
+        ) : scanStatus === 'cooldown' ? (
+          <>
+            <CheckCircle2 className="w-5 h-5" />
+            <span>Menunggu antrean berikutnya...</span>
           </>
         ) : (
           <>
-            <Camera className="w-6 h-6" />
-            <span>Mulai Scan Absensi</span>
+            <Camera className="w-5 h-5" />
+            <span>Auto Scan Aktif (Idle)</span>
           </>
         )}
-      </button>
+      </div>
 
       {/* Modern Success Modal */}
       {successData && (
