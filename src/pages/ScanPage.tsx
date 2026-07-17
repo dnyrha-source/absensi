@@ -146,7 +146,7 @@ export default function ScanPage() {
       const descriptor = await getFaceEmbedding(videoRef.current);
       if (descriptor) {
         let foundUser: User | null = null;
-        let minDistance = 0.5; 
+        let minDistance = 0.42; 
 
         for (const user of usersList) {
           if (user.faceEmbedding) {
