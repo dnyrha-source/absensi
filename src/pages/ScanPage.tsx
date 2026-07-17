@@ -60,16 +60,16 @@ export default function ScanPage() {
       .catch((err) => console.error("Error accessing webcam:", err));
   };
 
-  const playSuccessSound = () => {
+  const playSound = (type: 'success' | 'error' | 'cooldown') => {
     try {
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
       if (!AudioContextClass) return;
       const ctx = new AudioContextClass();
       
-      const playNote = (freq: number, startTime: number, duration: number) => {
+      const playNote = (freq: number, startTime: number, duration: number, oscType: OscillatorType = 'sine') => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        osc.type = 'sine';
+        osc.type = oscType;
         osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
         
         gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
@@ -83,9 +83,18 @@ export default function ScanPage() {
         osc.stop(ctx.currentTime + startTime + duration);
       };
 
-      // Nice positive chime (C5 -> E5)
-      playNote(523.25, 0, 0.3);
-      playNote(659.25, 0.15, 0.5);
+      if (type === 'success') {
+        // C5 -> E5 (Positive chime)
+        playNote(523.25, 0, 0.3);
+        playNote(659.25, 0.15, 0.5);
+      } else if (type === 'error') {
+        // Low pitched double buzz (Warning)
+        playNote(150, 0, 0.2, 'sawtooth');
+        playNote(150, 0.25, 0.3, 'sawtooth');
+      } else if (type === 'cooldown') {
+        // Single quick neutral ding
+        playNote(440, 0, 0.1, 'triangle');
+      }
     } catch (e) {
       console.log("Audio not supported or blocked", e);
     }
@@ -155,10 +164,20 @@ export default function ScanPage() {
         if (!foundUser) {
           setUnregisteredFace(new Float32Array(descriptor));
           setScanStatus('unregistered');
+          playSound('error');
         } else {
           // Check cooldown (60 seconds)
           const lastScanTime = cooldowns.current.get(foundUser.id);
           if (lastScanTime && Date.now() - lastScanTime < 60000) {
+            // Play cooldown sound max once every 5 seconds per person
+            const cdSounds = (cooldowns.current as any).sounds || new Map<string, number>();
+            const lastSoundTime = cdSounds.get(foundUser.id) || 0;
+            if (Date.now() - lastSoundTime > 5000) {
+              playSound('cooldown');
+              cdSounds.set(foundUser.id, Date.now());
+              (cooldowns.current as any).sounds = cdSounds;
+            }
+            
             setScanStatus('cooldown');
             isScanningRef.current = false;
             return; // Skip logging
@@ -166,7 +185,7 @@ export default function ScanPage() {
           
           cooldowns.current.set(foundUser.id, Date.now());
           await addLog(foundUser.id);
-          playSuccessSound();
+          playSound('success');
           setSuccessData({
             name: foundUser.nama,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
