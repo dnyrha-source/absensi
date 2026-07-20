@@ -58,7 +58,9 @@ export default function RegistrationPage() {
   }, []);
 
   const startVideo = () => {
-    navigator.mediaDevices.getUserMedia({ video: true })
+    navigator.mediaDevices.getUserMedia({ 
+      video: { facingMode: 'user' } 
+    })
       .then((stream) => {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -125,14 +127,14 @@ export default function RegistrationPage() {
     <div className="p-6 md:p-8 max-w-4xl mx-auto">
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Registrasi Pengunjung Baru</h2>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">Lengkapi data Anda dan ambil foto wajah untuk KTP Master (Resolusi Tinggi).</p>
+        <p className="text-gray-500 dark:text-gray-400 mt-1">Lengkapi data Anda dan ambil foto wajah untuk Foto Master (Resolusi Tinggi).</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Camera Section */}
         <div className="space-y-4">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Foto Wajah (SSDMobileNetV1 HD)</label>
-          <div className="relative w-full aspect-video md:aspect-square bg-slate-900 rounded-2xl overflow-hidden shadow-xl border border-slate-700/50">
+          <div className="relative w-full aspect-square bg-slate-900 rounded-2xl overflow-hidden shadow-xl border border-slate-700/50">
             {!faceEmbedding ? (
               <>
                 <video 
@@ -152,7 +154,7 @@ export default function RegistrationPage() {
             ) : (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-green-500/10 text-green-500 border-2 border-green-500 rounded-2xl">
                 <CheckCircle2 className="w-16 h-16 mb-2" />
-                <p className="font-bold text-lg">Foto KTP Master Tersimpan!</p>
+                <p className="font-bold text-lg">Foto Master Tersimpan!</p>
               </div>
             )}
           </div>
