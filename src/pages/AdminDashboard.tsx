@@ -46,6 +46,20 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     loadData();
+
+    // Auto refresh every 15 seconds (background polling)
+    const interval = setInterval(async () => {
+      try {
+        const fetchedUsers = await getUsers();
+        const fetchedLogs = await getLogs();
+        setUsers(fetchedUsers);
+        setLogs(fetchedLogs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
+      } catch(e) {
+        console.error("Gagal memuat data auto-refresh", e);
+      }
+    }, 15000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const loadData = async () => {
@@ -248,7 +262,13 @@ export default function AdminDashboard() {
       {/* Header & Tabs */}
       <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Dashboard Admin</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Dashboard Admin</h2>
+            <span className="px-2 py-1 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-xs font-medium rounded-full flex items-center gap-1">
+              <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+              Auto-Refresh Aktif
+            </span>
+          </div>
           <p className="text-gray-500 dark:text-gray-400 mt-1">Manajemen log kunjungan dan master data pengunjung</p>
         </div>
         <div className="flex bg-gray-100 dark:bg-slate-800 rounded-lg p-1 border border-gray-200 dark:border-slate-700">
