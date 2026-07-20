@@ -59,7 +59,11 @@ export default function RegistrationPage() {
 
   const startVideo = () => {
     navigator.mediaDevices.getUserMedia({ 
-      video: { facingMode: 'user' } 
+      video: { 
+        facingMode: 'user',
+        width: { ideal: 720 },
+        height: { ideal: 1280 }
+      } 
     })
       .then((stream) => {
         if (videoRef.current) {
