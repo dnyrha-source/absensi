@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, RefreshCw, CheckCircle2 } from 'lucide-react';
-import { loadModels, getFaceEmbedding } from '../lib/faceApi';
+import { loadScanModels, getFastFaceEmbedding } from '../lib/faceApi';
 import { getUsers, addLog } from '../lib/db';
 import type { User } from '../lib/db';
 import * as faceapi from '@vladmandic/face-api';
@@ -29,7 +29,7 @@ export default function ScanPage() {
   useEffect(() => {
     const init = async () => {
       try {
-        await loadModels();
+        await loadScanModels();
         setIsModelsLoaded(true);
         startVideo();
         
@@ -142,8 +142,8 @@ export default function ScanPage() {
       setScanStatus('active');
       isScanningRef.current = true;
       
-      // 2. Heavy extraction
-      const descriptor = await getFaceEmbedding(videoRef.current);
+      // 2. Heavy extraction (Fast Version)
+      const descriptor = await getFastFaceEmbedding(videoRef.current);
       if (descriptor) {
         let foundUser: User | null = null;
         let minDistance = 0.46; 
@@ -275,7 +275,7 @@ export default function ScanPage() {
             <p className="text-slate-300 text-sm mb-6">Sistem tidak mengenali wajah ini. Apakah Anda ingin mendaftar?</p>
             <div className="flex flex-col w-full gap-3">
               <button 
-                onClick={() => navigate('/register', { state: { faceEmbedding: Array.from(unregisteredFace) } })}
+                onClick={() => navigate('/register')}
                 className="w-full py-3 bg-primary hover:bg-blue-600 text-white rounded-xl font-bold shadow-lg transition-all active:scale-95"
               >
                 Klik Untuk Registrasi

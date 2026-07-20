@@ -1,6 +1,6 @@
 import * as faceapi from '@vladmandic/face-api';
 
-export const loadModels = async () => {
+export const loadScanModels = async () => {
   const MODEL_URL = '/models';
   try {
     // Initialize TensorFlow.js backend
@@ -14,14 +14,34 @@ export const loadModels = async () => {
       faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL),
       faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
     ]);
-    console.log('Face API Models loaded successfully');
+    console.log('Scan Face API Models loaded successfully');
   } catch (error) {
-    console.error('Error loading face API models', error);
+    console.error('Error loading scan face API models', error);
     throw error;
   }
 };
 
-export const getFaceEmbedding = async (videoElement: HTMLVideoElement) => {
+export const loadRegistrationModels = async () => {
+  const MODEL_URL = '/models';
+  try {
+    // @ts-ignore
+    await faceapi.tf.setBackend('webgl');
+    // @ts-ignore
+    await faceapi.tf.ready();
+    
+    await Promise.all([
+      faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
+      faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+      faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+    ]);
+    console.log('Registration Face API Models loaded successfully');
+  } catch (error) {
+    console.error('Error loading registration face API models', error);
+    throw error;
+  }
+};
+
+export const getFastFaceEmbedding = async (videoElement: HTMLVideoElement) => {
   const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
   
   const detection = await faceapi.detectSingleFace(videoElement, options)
@@ -31,6 +51,18 @@ export const getFaceEmbedding = async (videoElement: HTMLVideoElement) => {
   if (!detection) return null;
   
   // The face descriptor is a Float32Array of 128 values
+  return Array.from(detection.descriptor);
+};
+
+export const getHighQualityFaceEmbedding = async (videoElement: HTMLVideoElement) => {
+  const options = new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 });
+  
+  const detection = await faceapi.detectSingleFace(videoElement, options)
+    .withFaceLandmarks(false) // use standard landmark net
+    .withFaceDescriptor();
+  
+  if (!detection) return null;
+  
   return Array.from(detection.descriptor);
 };
 
