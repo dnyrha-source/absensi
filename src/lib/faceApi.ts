@@ -55,7 +55,7 @@ export const getFastFaceEmbedding = async (videoElement: HTMLVideoElement) => {
 };
 
 export const getHighQualityFaceEmbedding = async (videoElement: HTMLVideoElement) => {
-  const options = new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 });
+  const options = new faceapi.SsdMobilenetv1Options({ minConfidence: 0.4 });
   
   const detection = await faceapi.detectSingleFace(videoElement, options)
     .withFaceLandmarks(false) // use standard landmark net

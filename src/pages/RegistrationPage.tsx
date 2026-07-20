@@ -134,7 +134,7 @@ export default function RegistrationPage() {
         {/* Camera Section */}
         <div className="space-y-4">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Foto Wajah (SSDMobileNetV1 HD)</label>
-          <div className="relative w-full aspect-square bg-slate-900 rounded-2xl overflow-hidden shadow-xl border border-slate-700/50">
+          <div className="relative w-full h-[350px] md:h-[450px] bg-black rounded-2xl overflow-hidden shadow-xl border border-slate-700/50">
             {!faceEmbedding ? (
               <>
                 <video 
@@ -142,7 +142,7 @@ export default function RegistrationPage() {
                   autoPlay 
                   playsInline 
                   muted 
-                  className="w-full h-full object-cover mirror"
+                  className="w-full h-full object-contain mirror"
                 />
                 {!isModelsLoaded && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/80 backdrop-blur-sm z-10 text-white">
