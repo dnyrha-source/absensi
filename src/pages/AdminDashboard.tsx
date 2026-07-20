@@ -39,6 +39,10 @@ export default function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [logSearchQuery, setLogSearchQuery] = useState('');
   
+  // Filter States for Users
+  const [userKategoriFilter, setUserKategoriFilter] = useState('Semua');
+  const [userKelasFilter, setUserKelasFilter] = useState('');
+  
   // Modal States
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [viewingUser, setViewingUser] = useState<User | null>(null);
@@ -153,7 +157,13 @@ export default function AdminDashboard() {
     .slice(0, 10);
 
   // Search filter for Users Tab
-  const filteredUsers = users.filter(u => u.nama.toLowerCase().includes(searchQuery.toLowerCase()));
+  let filteredUsers = users.filter(u => u.nama.toLowerCase().includes(searchQuery.toLowerCase()));
+  if (userKategoriFilter !== 'Semua') {
+    filteredUsers = filteredUsers.filter(u => getVisitorStatus(u) === userKategoriFilter);
+  }
+  if (userKelasFilter.trim() !== '') {
+    filteredUsers = filteredUsers.filter(u => u.kelas?.toLowerCase().includes(userKelasFilter.toLowerCase()));
+  }
 
   // --- BUSY HOURS CALCULATION ---
   const hourlyData = Array(24).fill(0);
@@ -511,15 +521,54 @@ export default function AdminDashboard() {
 
       {activeTab === 'users' && (
         <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center flex-wrap gap-4">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Master Data Pengunjung Terdaftar ({filteredUsers.length})</h3>
-            <input 
-              type="text"
-              placeholder="Cari nama siswa/pengunjung..."
-              value={searchQuery}
-              onChange={(e) => { setSearchQuery(e.target.value); setUserPage(1); }}
-              className="px-4 py-2 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg outline-none text-sm text-gray-800 dark:text-gray-200 min-w-[250px]"
-            />
+          <div className="p-6 border-b border-gray-100 dark:border-slate-700">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Master Data Pengunjung Terdaftar ({filteredUsers.length})</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Cari Nama</label>
+                <input 
+                  type="text"
+                  placeholder="Ketik nama siswa/pengunjung..."
+                  value={searchQuery}
+                  onChange={(e) => { setSearchQuery(e.target.value); setUserPage(1); }}
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg outline-none text-sm text-gray-800 dark:text-gray-200"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Filter Kategori</label>
+                <select 
+                  value={userKategoriFilter}
+                  onChange={(e) => { setUserKategoriFilter(e.target.value); setUserPage(1); }}
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg outline-none text-sm text-gray-800 dark:text-gray-200"
+                >
+                  <option value="Semua">Semua Kategori</option>
+                  <option value="Siswa SMP">Siswa SMP</option>
+                  <option value="Siswa SMA">Siswa SMA</option>
+                  <option value="Guru">Guru</option>
+                  <option value="Karyawan">Karyawan</option>
+                  <option value="Pimpinan">Pimpinan</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Filter Kelas</label>
+                <select 
+                  value={userKelasFilter}
+                  onChange={(e) => { setUserKelasFilter(e.target.value); setUserPage(1); }}
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg outline-none text-sm text-gray-800 dark:text-gray-200"
+                >
+                  <option value="">Semua Kelas</option>
+                  <optgroup label="SMP">
+                    {['7','8','9'].flatMap(g => ['A','B','C','D','E','F','G'].map(s => <option key={g+s} value={g+s}>{g}{s}</option>))}
+                  </optgroup>
+                  <optgroup label="SMA">
+                    {['10','11','12'].flatMap(g => ['A','B','C','D','E','F','G'].map(s => <option key={g+s} value={g+s}>{g}{s}</option>))}
+                  </optgroup>
+                </select>
+              </div>
+            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
