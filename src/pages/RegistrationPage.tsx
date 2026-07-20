@@ -60,9 +60,7 @@ export default function RegistrationPage() {
   const startVideo = () => {
     navigator.mediaDevices.getUserMedia({ 
       video: { 
-        facingMode: 'user',
-        width: { ideal: 720 },
-        height: { ideal: 1280 }
+        facingMode: 'user'
       } 
     })
       .then((stream) => {
@@ -70,7 +68,10 @@ export default function RegistrationPage() {
           videoRef.current.srcObject = stream;
         }
       })
-      .catch((err) => console.error("Error accessing webcam:", err));
+      .catch((err) => {
+        console.error("Error accessing webcam:", err);
+        alert("Kamera tidak dapat diakses atau diblokir oleh browser. (" + err.message + ")");
+      });
   };
 
   const handleCaptureFace = async () => {
