@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Users, User as UserIcon, GraduationCap, Building2, Briefcase, FileSpreadsheet, Edit, Trash2, X, BarChart3, ChevronLeft, ChevronRight } from 'lucide-react';
-import { getUsers, getLogs, updateUser, deleteUser } from '../lib/db';
+import { getUsers, getLogs, updateUser, deleteUser, getSettings, saveSettings, defaultSettings, AppSettings } from '../lib/db';
 import type { User, AttendanceLog } from '../lib/db';
 
 export default function AdminDashboard() {
@@ -9,7 +9,7 @@ export default function AdminDashboard() {
   const [errorMsg, setErrorMsg] = useState('');
 
   // Tab State
-  const [activeTab, setActiveTab] = useState<'logs' | 'users'>('logs');
+  const [activeTab, setActiveTab] = useState<'logs' | 'users' | 'settings'>('logs');
 
   // Pagination States
   const [logPage, setLogPage] = useState(1);
@@ -19,6 +19,10 @@ export default function AdminDashboard() {
   // Data States
   const [users, setUsers] = useState<User[]>([]);
   const [logs, setLogs] = useState<AttendanceLog[]>([]);
+  const [settings, setSettings] = useState<AppSettings>(defaultSettings);
+  
+  // Settings Tab State
+  const [tempSettings, setTempSettings] = useState<string>('');
   
   // Filter States for Logs
   const [startDate, setStartDate] = useState(() => {
@@ -71,7 +75,10 @@ export default function AdminDashboard() {
     try {
       const fetchedUsers = await getUsers();
       const fetchedLogs = await getLogs();
+      const fetchedSettings = await getSettings();
       setUsers(fetchedUsers);
+      setSettings(fetchedSettings);
+      setTempSettings(JSON.stringify(fetchedSettings, null, 2));
       setLogs(fetchedLogs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
     } catch(e) {
       console.error("Gagal memuat data", e);
@@ -228,6 +235,20 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleSaveSettings = async () => {
+    try {
+      setIsLoading(true);
+      const newSettings = JSON.parse(tempSettings) as AppSettings;
+      await saveSettings(newSettings);
+      setSettings(newSettings);
+      alert("Pengaturan berhasil disimpan!");
+    } catch(e: any) {
+      alert("Format JSON tidak valid! Pastikan tanda kutip dan koma benar. (" + e.message + ")");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const StatCard = ({ title, value, icon, color }: { title: string, value: number, icon: React.ReactNode, color: string }) => (
     <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-100 dark:border-slate-700 shadow-sm flex items-center gap-4">
       <div className={`p-4 rounded-lg ${color} bg-opacity-10 text-${color.split('-')[1]}`}>
@@ -281,7 +302,7 @@ export default function AdminDashboard() {
           </div>
           <p className="text-gray-500 dark:text-gray-400 mt-1">Manajemen log kunjungan dan master data pengunjung</p>
         </div>
-        <div className="flex bg-gray-100 dark:bg-slate-800 rounded-lg p-1 border border-gray-200 dark:border-slate-700">
+        <div className="flex bg-gray-100 dark:bg-slate-800 rounded-lg p-1 border border-gray-200 dark:border-slate-700 overflow-x-auto whitespace-nowrap">
           <button
             onClick={() => setActiveTab('logs')}
             className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'logs' ? 'bg-white dark:bg-slate-700 shadow-sm text-primary dark:text-white' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
@@ -292,7 +313,13 @@ export default function AdminDashboard() {
             onClick={() => setActiveTab('users')}
             className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'users' ? 'bg-white dark:bg-slate-700 shadow-sm text-primary dark:text-white' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
           >
-            Master Data Siswa / Pengunjung
+            Master Data Pengunjung
+          </button>
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'settings' ? 'bg-white dark:bg-slate-700 shadow-sm text-primary dark:text-white' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+          >
+            Pengaturan Master
           </button>
         </div>
       </div>
@@ -337,11 +364,7 @@ export default function AdminDashboard() {
                 className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg outline-none text-sm text-gray-800 dark:text-gray-200"
               >
                 <option value="Semua">Semua Kategori</option>
-                <option value="Siswa SMP">Siswa SMP</option>
-                <option value="Siswa SMA">Siswa SMA</option>
-                <option value="Guru">Guru</option>
-                <option value="Karyawan">Karyawan</option>
-                <option value="Pimpinan">Pimpinan</option>
+                {settings.kategori.map(k => <option key={k} value={k}>{k}</option>)}
               </select>
             </div>
             <div>
@@ -353,10 +376,10 @@ export default function AdminDashboard() {
               >
                 <option value="">Semua Kelas</option>
                 <optgroup label="SMP">
-                  {['7','8','9'].flatMap(g => ['A','B','C','D','E','F','G','H'].map(s => <option key={g+s} value={g+s}>{g}{s}</option>))}
+                  {settings.kelasSMP.map(s => <option key={s} value={s}>{s}</option>)}
                 </optgroup>
                 <optgroup label="SMA">
-                  {['10','11','12'].flatMap(g => ['A','B','C','D','E','F','G','H'].map(s => <option key={g+s} value={g+s}>{g}{s}</option>))}
+                  {settings.kelasSMA.map(s => <option key={s} value={s}>{s}</option>)}
                 </optgroup>
               </select>
             </div>
@@ -545,11 +568,7 @@ export default function AdminDashboard() {
                   className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg outline-none text-sm text-gray-800 dark:text-gray-200"
                 >
                   <option value="Semua">Semua Kategori</option>
-                  <option value="Siswa SMP">Siswa SMP</option>
-                  <option value="Siswa SMA">Siswa SMA</option>
-                  <option value="Guru">Guru</option>
-                  <option value="Karyawan">Karyawan</option>
-                  <option value="Pimpinan">Pimpinan</option>
+                  {settings.kategori.map(k => <option key={k} value={k}>{k}</option>)}
                 </select>
               </div>
               <div>
@@ -561,10 +580,10 @@ export default function AdminDashboard() {
                 >
                   <option value="">Semua Kelas</option>
                   <optgroup label="SMP">
-                    {['7','8','9'].flatMap(g => ['A','B','C','D','E','F','G','H'].map(s => <option key={g+s} value={g+s}>{g}{s}</option>))}
+                    {settings.kelasSMP.map(s => <option key={s} value={s}>{s}</option>)}
                   </optgroup>
                   <optgroup label="SMA">
-                    {['10','11','12'].flatMap(g => ['A','B','C','D','E','F','G','H'].map(s => <option key={g+s} value={g+s}>{g}{s}</option>))}
+                    {settings.kelasSMA.map(s => <option key={s} value={s}>{s}</option>)}
                   </optgroup>
                 </select>
               </div>
@@ -651,6 +670,28 @@ export default function AdminDashboard() {
         </div>
       )}
 
+      {activeTab === 'settings' && (
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-gray-100 dark:border-slate-700">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">Pengaturan Master Data</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+              Edit data pengaturan di bawah ini dalam format JSON. Pastikan menggunakan tanda kutip ganda (") untuk teks.
+            </p>
+            <textarea 
+              value={tempSettings}
+              onChange={(e) => setTempSettings(e.target.value)}
+              className="w-full h-[400px] font-mono text-sm p-4 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg outline-none text-gray-800 dark:text-gray-200"
+              spellCheck={false}
+            />
+            <div className="mt-4 flex justify-end">
+              <button onClick={handleSaveSettings} className="btn-primary py-2 px-6">
+                Simpan Pengaturan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Edit Modal */}
       {editingUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -681,8 +722,7 @@ export default function AdminDashboard() {
                       onChange={(e) => setEditingUser({...editingUser, jenjang: e.target.value})}
                       className="w-full px-4 py-2 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg outline-none text-gray-800 dark:text-white"
                     >
-                      <option value="SMP">SMP</option>
-                      <option value="SMA">SMA</option>
+                      {settings.jenjang.map(j => <option key={j} value={j}>{j}</option>)}
                     </select>
                   </div>
                   <div>
@@ -695,9 +735,9 @@ export default function AdminDashboard() {
                     >
                       <option value="" disabled>Pilih Kelas</option>
                       {editingUser.jenjang === 'SMP' ? (
-                        ['7','8','9'].flatMap(g => ['A','B','C','D','E','F','G','H'].map(s => <option key={g+s} value={g+s}>{g}{s}</option>))
+                        settings.kelasSMP.map(s => <option key={s} value={s}>{s}</option>)
                       ) : editingUser.jenjang === 'SMA' ? (
-                        ['10','11','12'].flatMap(g => ['A','B','C','D','E','F','G','H'].map(s => <option key={g+s} value={g+s}>{g}{s}</option>))
+                        settings.kelasSMA.map(s => <option key={s} value={s}>{s}</option>)
                       ) : null}
                     </select>
                   </div>

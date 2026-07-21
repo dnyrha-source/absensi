@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { saveUser, addLog } from '../lib/db';
+import { saveUser, addLog, getSettings, defaultSettings, AppSettings } from '../lib/db';
 import { Loader2, Camera, CheckCircle2 } from 'lucide-react';
 import { loadRegistrationModels, getHighQualityFaceEmbedding } from '../lib/faceApi';
 
@@ -20,6 +20,7 @@ export default function RegistrationPage() {
   const [isModelsLoaded, setIsModelsLoaded] = useState(false);
   const [faceEmbedding, setFaceEmbedding] = useState<number[] | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
+  const [settings, setSettings] = useState<AppSettings>(defaultSettings);
   const videoRef = useRef<HTMLVideoElement>(null);
   const navigate = useNavigate();
 
@@ -39,6 +40,13 @@ export default function RegistrationPage() {
 
   useEffect(() => {
     const init = async () => {
+      try {
+        const fetchedSettings = await getSettings();
+        setSettings(fetchedSettings);
+      } catch (e: any) {
+        console.error("Gagal memuat pengaturan: ", e);
+      }
+
       try {
         await loadRegistrationModels();
         setIsModelsLoaded(true);
@@ -209,10 +217,9 @@ export default function RegistrationPage() {
                 className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all dark:text-white"
               >
                 <option value="" disabled>Pilih Kategori</option>
-                <option value="Siswa">Siswa</option>
-                <option value="Guru">Guru</option>
-                <option value="Karyawan">Karyawan</option>
-                <option value="Pimpinan">Pimpinan</option>
+                {settings.kategori.map((k, idx) => (
+                  <option key={idx} value={k}>{k}</option>
+                ))}
               </select>
               {errors.kategori && <span className="text-red-500 text-sm mt-1">Kategori wajib dipilih</span>}
             </div>
@@ -227,8 +234,9 @@ export default function RegistrationPage() {
                     className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all dark:text-white"
                   >
                     <option value="" disabled>Pilih</option>
-                    <option value="SMP">SMP</option>
-                    <option value="SMA">SMA</option>
+                    {settings.jenjang.map((j, idx) => (
+                      <option key={idx} value={j}>{j}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
@@ -239,10 +247,10 @@ export default function RegistrationPage() {
                   >
                     <option value="" disabled>Pilih Kelas</option>
                     {jenjang === 'SMP' && (
-                      ['7','8','9'].flatMap(g => ['A','B','C','D','E','F','G','H'].map(s => <option key={g+s} value={g+s}>{g}{s}</option>))
+                      settings.kelasSMP.map(s => <option key={s} value={s}>{s}</option>)
                     )}
                     {jenjang === 'SMA' && (
-                      ['10','11','12'].flatMap(g => ['A','B','C','D','E','F','G','H'].map(s => <option key={g+s} value={g+s}>{g}{s}</option>))
+                      settings.kelasSMA.map(s => <option key={s} value={s}>{s}</option>)
                     )}
                   </select>
                   {errors.kelas && <span className="text-red-500 text-sm mt-1">Kelas wajib dipilih</span>}
@@ -258,9 +266,7 @@ export default function RegistrationPage() {
                   className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all dark:text-white"
                 >
                   <option value="" disabled>Pilih Unit</option>
-                  <option value="KB/TK">KB/TK</option>
-                  <option value="SMP">SMP</option>
-                  <option value="SMA">SMA</option>
+                  {settings.unit.map(u => <option key={u} value={u}>{u}</option>)}
                 </select>
               </div>
             )}
@@ -268,24 +274,26 @@ export default function RegistrationPage() {
             {kategori === 'Karyawan' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bagian</label>
-                <input 
-                  type="text" 
+                <select 
                   {...register('bagian', { required: true })}
                   className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all dark:text-white"
-                  placeholder="Misal: Tata Usaha"
-                />
+                >
+                  <option value="" disabled>Pilih Bagian</option>
+                  {settings.bagian.map(b => <option key={b} value={b}>{b}</option>)}
+                </select>
               </div>
             )}
 
             {kategori === 'Pimpinan' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Jabatan</label>
-                <input 
-                  type="text" 
+                <select 
                   {...register('jabatan', { required: true })}
                   className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all dark:text-white"
-                  placeholder="Misal: Kepala Sekolah"
-                />
+                >
+                  <option value="" disabled>Pilih Jabatan</option>
+                  {settings.jabatan.map(j => <option key={j} value={j}>{j}</option>)}
+                </select>
               </div>
             )}
           </div>
