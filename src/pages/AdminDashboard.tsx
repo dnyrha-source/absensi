@@ -133,7 +133,7 @@ export default function AdminDashboard() {
   // Filter Kategori & Kelas
   let finalLogs = logsWithUsers;
   if (kategoriFilter !== 'Semua') {
-    finalLogs = finalLogs.filter(l => getVisitorStatus(l.user) === kategoriFilter);
+    finalLogs = finalLogs.filter(l => l.user?.kategori === kategoriFilter);
   }
   if (kelasFilter.trim() !== '') {
     finalLogs = finalLogs.filter(l => l.user?.kelas?.toLowerCase().includes(kelasFilter.toLowerCase()));
@@ -145,11 +145,11 @@ export default function AdminDashboard() {
   // Stats
   const stats = {
     total: finalLogs.length,
-    smp: finalLogs.filter(l => getVisitorStatus(l.user) === 'Siswa SMP').length,
-    sma: finalLogs.filter(l => getVisitorStatus(l.user) === 'Siswa SMA').length,
-    guru: finalLogs.filter(l => getVisitorStatus(l.user) === 'Guru').length,
-    karyawan: finalLogs.filter(l => getVisitorStatus(l.user) === 'Karyawan').length,
-    pimpinan: finalLogs.filter(l => getVisitorStatus(l.user) === 'Pimpinan').length,
+    smp: finalLogs.filter(l => l.user?.kategori === 'Siswa' && l.user?.jenjang === 'SMP').length,
+    sma: finalLogs.filter(l => l.user?.kategori === 'Siswa' && l.user?.jenjang === 'SMA').length,
+    guru: finalLogs.filter(l => l.user?.kategori === 'Guru').length,
+    karyawan: finalLogs.filter(l => l.user?.kategori === 'Karyawan').length,
+    pimpinan: finalLogs.filter(l => l.user?.kategori === 'Pimpinan').length,
   };
 
   const getUserVisitCount = (userId: string) => {
@@ -166,7 +166,7 @@ export default function AdminDashboard() {
   // Search filter for Users Tab
   let filteredUsers = users.filter(u => u.nama.toLowerCase().includes(searchQuery.toLowerCase()));
   if (userKategoriFilter !== 'Semua') {
-    filteredUsers = filteredUsers.filter(u => getVisitorStatus(u) === userKategoriFilter);
+    filteredUsers = filteredUsers.filter(u => u.kategori === userKategoriFilter);
   }
   if (userKelasFilter.trim() !== '') {
     filteredUsers = filteredUsers.filter(u => u.kelas?.toLowerCase().includes(userKelasFilter.toLowerCase()));
