@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Users, User as UserIcon, GraduationCap, Building2, Briefcase, FileSpreadsheet, Edit, Trash2, X, BarChart3, ChevronLeft, ChevronRight } from 'lucide-react';
-import { getUsers, getLogs, updateUser, deleteUser, getSettings, saveSettings, defaultSettings, AppSettings } from '../lib/db';
-import type { User, AttendanceLog } from '../lib/db';
+import { getUsers, getLogs, updateUser, deleteUser, getSettings, saveSettings, defaultSettings } from '../lib/db';
+import type { User, AttendanceLog, AppSettings } from '../lib/db';
 
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);

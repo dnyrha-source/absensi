@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { saveUser, addLog, getSettings, defaultSettings, AppSettings } from '../lib/db';
+import { saveUser, addLog, getSettings, defaultSettings } from '../lib/db';
+import type { AppSettings } from '../lib/db';
 import { Loader2, Camera, CheckCircle2 } from 'lucide-react';
 import { loadRegistrationModels, getHighQualityFaceEmbedding } from '../lib/faceApi';
 
