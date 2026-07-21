@@ -353,10 +353,10 @@ export default function AdminDashboard() {
               >
                 <option value="">Semua Kelas</option>
                 <optgroup label="SMP">
-                  {['7','8','9'].flatMap(g => ['A','B','C','D','E','F','G'].map(s => <option key={g+s} value={g+s}>{g}{s}</option>))}
+                  {['7','8','9'].flatMap(g => ['A','B','C','D','E','F','G','H'].map(s => <option key={g+s} value={g+s}>{g}{s}</option>))}
                 </optgroup>
                 <optgroup label="SMA">
-                  {['10','11','12'].flatMap(g => ['A','B','C','D','E','F','G'].map(s => <option key={g+s} value={g+s}>{g}{s}</option>))}
+                  {['10','11','12'].flatMap(g => ['A','B','C','D','E','F','G','H'].map(s => <option key={g+s} value={g+s}>{g}{s}</option>))}
                 </optgroup>
               </select>
             </div>
@@ -561,10 +561,10 @@ export default function AdminDashboard() {
                 >
                   <option value="">Semua Kelas</option>
                   <optgroup label="SMP">
-                    {['7','8','9'].flatMap(g => ['A','B','C','D','E','F','G'].map(s => <option key={g+s} value={g+s}>{g}{s}</option>))}
+                    {['7','8','9'].flatMap(g => ['A','B','C','D','E','F','G','H'].map(s => <option key={g+s} value={g+s}>{g}{s}</option>))}
                   </optgroup>
                   <optgroup label="SMA">
-                    {['10','11','12'].flatMap(g => ['A','B','C','D','E','F','G'].map(s => <option key={g+s} value={g+s}>{g}{s}</option>))}
+                    {['10','11','12'].flatMap(g => ['A','B','C','D','E','F','G','H'].map(s => <option key={g+s} value={g+s}>{g}{s}</option>))}
                   </optgroup>
                 </select>
               </div>
@@ -695,9 +695,9 @@ export default function AdminDashboard() {
                     >
                       <option value="" disabled>Pilih Kelas</option>
                       {editingUser.jenjang === 'SMP' ? (
-                        ['7','8','9'].flatMap(g => ['A','B','C','D','E','F','G'].map(s => <option key={g+s} value={g+s}>{g}{s}</option>))
+                        ['7','8','9'].flatMap(g => ['A','B','C','D','E','F','G','H'].map(s => <option key={g+s} value={g+s}>{g}{s}</option>))
                       ) : editingUser.jenjang === 'SMA' ? (
-                        ['10','11','12'].flatMap(g => ['A','B','C','D','E','F','G'].map(s => <option key={g+s} value={g+s}>{g}{s}</option>))
+                        ['10','11','12'].flatMap(g => ['A','B','C','D','E','F','G','H'].map(s => <option key={g+s} value={g+s}>{g}{s}</option>))
                       ) : null}
                     </select>
                   </div>

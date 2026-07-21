@@ -239,10 +239,10 @@ export default function RegistrationPage() {
                   >
                     <option value="" disabled>Pilih Kelas</option>
                     {jenjang === 'SMP' && (
-                      ['7','8','9'].flatMap(g => ['A','B','C','D','E','F','G'].map(s => <option key={g+s} value={g+s}>{g}{s}</option>))
+                      ['7','8','9'].flatMap(g => ['A','B','C','D','E','F','G','H'].map(s => <option key={g+s} value={g+s}>{g}{s}</option>))
                     )}
                     {jenjang === 'SMA' && (
-                      ['10','11','12'].flatMap(g => ['A','B','C','D','E','F','G'].map(s => <option key={g+s} value={g+s}>{g}{s}</option>))
+                      ['10','11','12'].flatMap(g => ['A','B','C','D','E','F','G','H'].map(s => <option key={g+s} value={g+s}>{g}{s}</option>))
                     )}
                   </select>
                   {errors.kelas && <span className="text-red-500 text-sm mt-1">Kelas wajib dipilih</span>}
