@@ -9,7 +9,7 @@ export default function AdminDashboard() {
   const [errorMsg, setErrorMsg] = useState('');
 
   // Tab State
-  const [activeTab, setActiveTab] = useState<'logs' | 'users' | 'settings'>('logs');
+  const [activeTab, setActiveTab] = useState<'logs' | 'users' | 'settings' | 'reports'>('logs');
 
   // Pagination States
   const [logPage, setLogPage] = useState(1);
@@ -23,6 +23,10 @@ export default function AdminDashboard() {
   
   // Settings Tab State
   const [tempSettings, setTempSettings] = useState<string>('');
+  
+  // Reports Tab State
+  const [minDaysReport, setMinDaysReport] = useState(15);
+  const [reportKategoriFilter, setReportKategoriFilter] = useState('Siswa');
   
   // Filter States for Logs
   const [startDate, setStartDate] = useState(() => {
@@ -172,6 +176,30 @@ export default function AdminDashboard() {
     filteredUsers = filteredUsers.filter(u => u.kelas?.toLowerCase().includes(userKelasFilter.toLowerCase()));
   }
 
+  // --- REPORTS CALCULATION (Active Users) ---
+  const getActiveUsersReport = () => {
+    const userUniqueDates = new Map<string, Set<string>>();
+    filteredLogs.forEach(log => {
+      // Local date string to prevent timezone offset issues
+      const dateStr = new Date(log.timestamp).toLocaleDateString();
+      if (!userUniqueDates.has(log.userId)) {
+        userUniqueDates.set(log.userId, new Set());
+      }
+      userUniqueDates.get(log.userId)?.add(dateStr);
+    });
+
+    let report = users.map(u => ({
+      user: u,
+      uniqueDays: userUniqueDates.get(u.id)?.size || 0
+    })).filter(item => item.uniqueDays >= minDaysReport);
+
+    if (reportKategoriFilter !== 'Semua') {
+      report = report.filter(item => item.user.kategori === reportKategoriFilter);
+    }
+    return report.sort((a, b) => b.uniqueDays - a.uniqueDays);
+  };
+  const activeUsersReport = getActiveUsersReport();
+
   // --- BUSY HOURS CALCULATION ---
   const hourlyData = Array(24).fill(0);
   finalLogs.forEach(log => {
@@ -320,6 +348,12 @@ export default function AdminDashboard() {
             className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'settings' ? 'bg-white dark:bg-slate-700 shadow-sm text-primary dark:text-white' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
           >
             Pengaturan Master
+          </button>
+          <button
+            onClick={() => setActiveTab('reports')}
+            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'reports' ? 'bg-white dark:bg-slate-700 shadow-sm text-primary dark:text-white' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+          >
+            Laporan Kunjungan
           </button>
         </div>
       </div>
@@ -688,6 +722,84 @@ export default function AdminDashboard() {
                 Simpan Pengaturan
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'reports' && (
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-gray-100 dark:border-slate-700">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">Laporan Pengunjung Aktif</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+              Daftar pengunjung yang telah datang pada <span className="font-semibold text-primary">{minDaysReport} hari berbeda</span> dalam rentang tanggal yang dipilih di atas (Mulai: {new Date(startDate).toLocaleDateString()} - {new Date(endDate).toLocaleDateString()}).
+            </p>
+            
+            <div className="flex gap-4 flex-wrap mb-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Target Minimal (Hari)</label>
+                <input 
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={minDaysReport}
+                  onChange={(e) => setMinDaysReport(Number(e.target.value))}
+                  className="w-32 px-3 py-2 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg outline-none text-sm text-gray-800 dark:text-gray-200"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Kategori Pengunjung</label>
+                <select 
+                  value={reportKategoriFilter}
+                  onChange={(e) => setReportKategoriFilter(e.target.value)}
+                  className="w-48 px-3 py-2 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg outline-none text-sm text-gray-800 dark:text-gray-200"
+                >
+                  <option value="Semua">Semua Kategori</option>
+                  {settings.kategori.map(k => <option key={k} value={k}>{k}</option>)}
+                </select>
+              </div>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead className="bg-gray-50 dark:bg-slate-900/50">
+                <tr className="border-b border-gray-100 dark:border-slate-700">
+                  <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Peringkat</th>
+                  <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Nama</th>
+                  <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Kategori</th>
+                  <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Detail</th>
+                  <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Total Hari Hadir</th>
+                </tr>
+              </thead>
+              <tbody>
+                {activeUsersReport.length > 0 ? (
+                  activeUsersReport.map((item, index) => (
+                    <tr key={item.user.id} className="border-b border-gray-50 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors">
+                      <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 font-bold">
+                        #{index + 1}
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium text-primary cursor-pointer hover:underline" onClick={() => setViewingUser(item.user)}>
+                        {item.user.nama}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                        {getVisitorStatus(item.user)}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                        {item.user.kategori === 'Siswa' ? (item.user.kelas ? `Kelas: ${item.user.kelas}` : '-') : (item.user.bagian || item.user.unit || item.user.jabatan || '-')}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-green-600 dark:text-green-400 font-bold">
+                        {item.uniqueDays} Hari
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                      Tidak ada pengunjung yang memenuhi target {minDaysReport} hari kunjungan unik.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
