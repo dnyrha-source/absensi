@@ -318,40 +318,44 @@ export default function AdminDashboard() {
   return (
     <div className="p-6 md:p-8 w-full max-w-6xl mx-auto">
       
-      {/* Header & Tabs */}
-      <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Dashboard Admin</h2>
-            <span className="px-2 py-1 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-xs font-medium rounded-full flex items-center gap-1">
-              <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
-              Auto-Refresh Aktif
-            </span>
+      {/* Navbar & Header */}
+      <div className="mb-8 border-b border-gray-200 dark:border-slate-700 pb-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div>
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Dashboard Admin</h2>
+              <span className="px-2 py-1 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-xs font-medium rounded-full flex items-center gap-1">
+                <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                Auto-Refresh Aktif
+              </span>
+            </div>
+            <p className="text-gray-500 dark:text-gray-400 mt-1">Manajemen log kunjungan dan master data pengunjung</p>
           </div>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Manajemen log kunjungan dan master data pengunjung</p>
         </div>
-        <div className="flex bg-gray-100 dark:bg-slate-800 rounded-lg p-1 border border-gray-200 dark:border-slate-700 overflow-x-auto whitespace-nowrap">
+
+        {/* Tab Navigation */}
+        <div className="flex overflow-x-auto hide-scrollbar gap-1">
           <button
             onClick={() => setActiveTab('logs')}
-            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'logs' ? 'bg-white dark:bg-slate-700 shadow-sm text-primary dark:text-white' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+            className={`px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors border-b-2 ${activeTab === 'logs' ? 'border-primary text-primary dark:text-white' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-slate-600'}`}
           >
             Log Kunjungan
           </button>
           <button
             onClick={() => setActiveTab('users')}
-            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'users' ? 'bg-white dark:bg-slate-700 shadow-sm text-primary dark:text-white' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+            className={`px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors border-b-2 ${activeTab === 'users' ? 'border-primary text-primary dark:text-white' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-slate-600'}`}
           >
             Master Data Pengunjung
           </button>
           <button
             onClick={() => setActiveTab('settings')}
-            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'settings' ? 'bg-white dark:bg-slate-700 shadow-sm text-primary dark:text-white' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+            className={`px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors border-b-2 ${activeTab === 'settings' ? 'border-primary text-primary dark:text-white' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-slate-600'}`}
           >
             Pengaturan Master
           </button>
           <button
             onClick={() => setActiveTab('reports')}
-            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'reports' ? 'bg-white dark:bg-slate-700 shadow-sm text-primary dark:text-white' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+            className={`px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors border-b-2 ${activeTab === 'reports' ? 'border-primary text-primary dark:text-white' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-slate-600'}`}
           >
             Laporan Kunjungan
           </button>
@@ -731,10 +735,28 @@ export default function AdminDashboard() {
           <div className="p-6 border-b border-gray-100 dark:border-slate-700">
             <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">Laporan Pengunjung Aktif</h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-              Daftar pengunjung yang telah datang pada <span className="font-semibold text-primary">{minDaysReport} hari berbeda</span> dalam rentang tanggal yang dipilih di atas (Mulai: {new Date(startDate).toLocaleDateString()} - {new Date(endDate).toLocaleDateString()}).
+              Daftar pengunjung yang telah datang pada <span className="font-semibold text-primary">{minDaysReport} hari berbeda</span>.
             </p>
             
-            <div className="flex gap-4 flex-wrap mb-4">
+            <div className="flex gap-4 flex-wrap mb-4 bg-gray-50 dark:bg-slate-900/50 p-4 rounded-lg border border-gray-100 dark:border-slate-700">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Dari Tanggal</label>
+                <input 
+                  type="date" 
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-36 px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-lg outline-none text-sm text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Sampai Tanggal</label>
+                <input 
+                  type="date" 
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-36 px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-lg outline-none text-sm text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+              </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Target Minimal (Hari)</label>
                 <input 
@@ -743,7 +765,7 @@ export default function AdminDashboard() {
                   max="100"
                   value={minDaysReport}
                   onChange={(e) => setMinDaysReport(Number(e.target.value))}
-                  className="w-32 px-3 py-2 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg outline-none text-sm text-gray-800 dark:text-gray-200"
+                  className="w-32 px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-lg outline-none text-sm text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
               </div>
               <div>
@@ -751,7 +773,7 @@ export default function AdminDashboard() {
                 <select 
                   value={reportKategoriFilter}
                   onChange={(e) => setReportKategoriFilter(e.target.value)}
-                  className="w-48 px-3 py-2 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg outline-none text-sm text-gray-800 dark:text-gray-200"
+                  className="w-48 px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-lg outline-none text-sm text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-primary focus:border-transparent"
                 >
                   <option value="Semua">Semua Kategori</option>
                   {settings.kategori.map(k => <option key={k} value={k}>{k}</option>)}
