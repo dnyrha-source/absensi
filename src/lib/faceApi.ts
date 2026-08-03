@@ -54,16 +54,56 @@ export const getFastFaceEmbedding = async (videoElement: HTMLVideoElement) => {
   return Array.from(detection.descriptor);
 };
 
-export const getHighQualityFaceEmbedding = async (videoElement: HTMLVideoElement) => {
-  const options = new faceapi.SsdMobilenetv1Options({ minConfidence: 0.4 });
+export type FaceCaptureResult = {
+  descriptor: number[] | null;
+  error?: string;
+};
+
+export const getHighQualityFaceEmbedding = async (videoElement: HTMLVideoElement): Promise<FaceCaptureResult> => {
+  // We use a base confidence of 0.5 so we can detect it, but we enforce 0.85 manually below
+  const options = new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 });
   
-  const detection = await faceapi.detectSingleFace(videoElement, options)
+  const detections = await faceapi.detectAllFaces(videoElement, options)
     .withFaceLandmarks(false) // use standard landmark net
-    .withFaceDescriptor();
+    .withFaceDescriptors();
   
-  if (!detection) return null;
+  if (!detections || detections.length === 0) {
+    return { descriptor: null, error: 'Wajah tidak terdeteksi sama sekali. Pastikan pencahayaan cukup dan wajah terlihat utuh.' };
+  }
+
+  // Find the largest face by bounding box area (Anti-Photobomb)
+  let largestDetection = detections[0];
+  let maxArea = 0;
+
+  for (const det of detections) {
+    const area = det.detection.box.width * det.detection.box.height;
+    if (area > maxArea) {
+      maxArea = area;
+      largestDetection = det;
+    }
+  }
+
+  // Calculate face area relative to the video frame
+  const videoArea = videoElement.videoWidth * videoElement.videoHeight;
+  const facePercentage = (maxArea / videoArea) * 100;
+
+  // 1. Check Strict Confidence
+  if (largestDetection.detection.score < 0.85) {
+    return { 
+      descriptor: null, 
+      error: `Wajah kurang jelas/gelap (Skor: ${Math.round(largestDetection.detection.score * 100)}%). Syarat minimal 85%. Cari tempat terang & jangan bergerak.` 
+    };
+  }
+
+  // 2. Check Face Distance / Size
+  if (facePercentage < 8) {
+    return { 
+      descriptor: null, 
+      error: 'Posisi HP terlalu jauh. Silakan dekatkan kamera ke wajah Anda.' 
+    };
+  }
   
-  return Array.from(detection.descriptor);
+  return { descriptor: Array.from(largestDetection.descriptor) };
 };
 
 export const compareEmbeddings = (descriptor1: number[], descriptor2: number[]) => {

@@ -93,7 +93,7 @@ export default function RegistrationPage() {
     
     setIsCapturing(true);
     try {
-      const descriptor = await getHighQualityFaceEmbedding(videoRef.current);
+      const { descriptor, error } = await getHighQualityFaceEmbedding(videoRef.current);
       if (descriptor) {
         setFaceEmbedding(descriptor);
         // Stop camera after successful capture
@@ -102,7 +102,7 @@ export default function RegistrationPage() {
           stream.getTracks().forEach(track => track.stop());
         }
       } else {
-        alert('Wajah tidak terdeteksi. Pastikan pencahayaan cukup dan wajah terlihat jelas.');
+        alert(error || 'Wajah tidak memenuhi kriteria. Coba lagi.');
       }
     } catch (error: any) {
       alert("Terjadi kesalahan saat mendeteksi wajah: " + error.message);
