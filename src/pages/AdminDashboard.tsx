@@ -180,7 +180,8 @@ export default function AdminDashboard() {
     filteredUsers = filteredUsers.filter(u => 
       u.unit?.toLowerCase().includes(userUnitFilter.toLowerCase()) || 
       u.bagian?.toLowerCase().includes(userUnitFilter.toLowerCase()) || 
-      u.jabatan?.toLowerCase().includes(userUnitFilter.toLowerCase())
+      u.jabatan?.toLowerCase().includes(userUnitFilter.toLowerCase()) ||
+      u.jenjang?.toLowerCase().includes(userUnitFilter.toLowerCase())
     );
   }
 
