@@ -17,8 +17,8 @@ function App() {
         <Route path="/" element={<Layout />}>
           <Route index element={<ScanPage />} />
           <Route path="register" element={<RegistrationPage />} />
-          <Route path="admin" element={<AdminDashboard />} />
         </Route>
+        <Route path="/admin" element={<AdminDashboard />} />
       </Routes>
     </BrowserRouter>
   );
