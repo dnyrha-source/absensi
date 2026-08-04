@@ -156,12 +156,29 @@ export default function RegistrationPage() {
                   autoPlay 
                   playsInline 
                   muted 
-                  className="w-full h-full object-contain mirror"
+                  className="w-full h-full object-cover mirror"
                 />
-                {!isModelsLoaded && (
+                {!isModelsLoaded ? (
                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/80 backdrop-blur-sm z-10 text-white">
                     <Loader2 className="w-8 h-8 animate-spin mb-2 text-primary" />
                     <p className="font-medium">Memuat AI Resolusi Tinggi (5MB)...</p>
+                  </div>
+                ) : !isCapturing && (
+                  <div className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden z-10">
+                    <div 
+                      className="w-[200px] h-[250px] md:w-[250px] md:h-[300px] border-4 border-dashed border-white/80 rounded-3xl relative"
+                      style={{ boxShadow: '0 0 0 9999px rgba(0,0,0,0.4)' }}
+                    >
+                      <div className="absolute -top-12 left-0 right-0 text-center text-white font-medium drop-shadow-md px-2">
+                        Posisikan wajah Anda di dalam area ini
+                      </div>
+                      
+                      {/* Corner Accents */}
+                      <div className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-primary rounded-tl-2xl"></div>
+                      <div className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-primary rounded-tr-2xl"></div>
+                      <div className="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-primary rounded-bl-2xl"></div>
+                      <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-primary rounded-br-2xl"></div>
+                    </div>
                   </div>
                 )}
               </>
