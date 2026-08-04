@@ -130,7 +130,7 @@ export default function ScanPage() {
     
     try {
       // 1. Lightweight detection first (Idle mode)
-      const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
+      const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 });
       const detection = await faceapi.detectSingleFace(videoRef.current, options);
       
       if (!detection) {
@@ -146,7 +146,7 @@ export default function ScanPage() {
       const descriptor = await getFastFaceEmbedding(videoRef.current);
       if (descriptor) {
         let foundUser: User | null = null;
-        let minDistance = 0.46; 
+        let minDistance = 0.53; 
 
         for (const user of usersList) {
           if (user.faceEmbedding) {

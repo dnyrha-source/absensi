@@ -42,7 +42,7 @@ export const loadRegistrationModels = async () => {
 };
 
 export const getFastFaceEmbedding = async (videoElement: HTMLVideoElement) => {
-  const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
+  const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 });
   
   const detection = await faceapi.detectSingleFace(videoElement, options)
     .withFaceLandmarks(true) // use tiny landmark net
