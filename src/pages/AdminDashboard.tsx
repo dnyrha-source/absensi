@@ -50,6 +50,7 @@ export default function AdminDashboard() {
   // Filter States for Users
   const [userKategoriFilter, setUserKategoriFilter] = useState('Semua');
   const [userKelasFilter, setUserKelasFilter] = useState('');
+  const [userUnitFilter, setUserUnitFilter] = useState('');
   
   // Modal States
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -174,6 +175,13 @@ export default function AdminDashboard() {
   }
   if (userKelasFilter.trim() !== '') {
     filteredUsers = filteredUsers.filter(u => u.kelas?.toLowerCase().includes(userKelasFilter.toLowerCase()));
+  }
+  if (userUnitFilter.trim() !== '') {
+    filteredUsers = filteredUsers.filter(u => 
+      u.unit?.toLowerCase().includes(userUnitFilter.toLowerCase()) || 
+      u.bagian?.toLowerCase().includes(userUnitFilter.toLowerCase()) || 
+      u.jabatan?.toLowerCase().includes(userUnitFilter.toLowerCase())
+    );
   }
 
   // --- REPORTS CALCULATION (Active Users) ---
@@ -619,7 +627,7 @@ export default function AdminDashboard() {
               <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Master Data Pengunjung Terdaftar ({filteredUsers.length})</h3>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Cari Nama</label>
                 <input 
@@ -654,6 +662,25 @@ export default function AdminDashboard() {
                   </optgroup>
                   <optgroup label="SMA">
                     {settings.kelasSMA.map(s => <option key={s} value={s}>{s}</option>)}
+                  </optgroup>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Filter Unit/Bagian</label>
+                <select 
+                  value={userUnitFilter}
+                  onChange={(e) => { setUserUnitFilter(e.target.value); setUserPage(1); }}
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg outline-none text-sm text-gray-800 dark:text-gray-200"
+                >
+                  <option value="">Semua Unit</option>
+                  <optgroup label="Unit">
+                    {settings.unit.map(s => <option key={s} value={s}>{s}</option>)}
+                  </optgroup>
+                  <optgroup label="Bagian">
+                    {settings.bagian.map(s => <option key={s} value={s}>{s}</option>)}
+                  </optgroup>
+                  <optgroup label="Jabatan">
+                    {settings.jabatan.map(s => <option key={s} value={s}>{s}</option>)}
                   </optgroup>
                 </select>
               </div>
