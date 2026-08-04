@@ -51,6 +51,7 @@ export default function AdminDashboard() {
   const [userKategoriFilter, setUserKategoriFilter] = useState('Semua');
   const [userKelasFilter, setUserKelasFilter] = useState('');
   const [userUnitFilter, setUserUnitFilter] = useState('');
+  const [userSortConfig, setUserSortConfig] = useState<{ key: 'nama' | 'kunjungan' | 'tanggal', direction: 'asc' | 'desc' } | null>(null);
   
   // Modal States
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -183,6 +184,26 @@ export default function AdminDashboard() {
       u.jabatan?.toLowerCase().includes(userUnitFilter.toLowerCase()) ||
       u.jenjang?.toLowerCase().includes(userUnitFilter.toLowerCase())
     );
+  }
+
+  // Sort Users
+  if (userSortConfig !== null) {
+    filteredUsers.sort((a, b) => {
+      if (userSortConfig.key === 'nama') {
+        return userSortConfig.direction === 'asc' ? a.nama.localeCompare(b.nama) : b.nama.localeCompare(a.nama);
+      }
+      if (userSortConfig.key === 'kunjungan') {
+        const countA = getUserVisitCount(a.id);
+        const countB = getUserVisitCount(b.id);
+        return userSortConfig.direction === 'asc' ? countA - countB : countB - countA;
+      }
+      if (userSortConfig.key === 'tanggal') {
+        const dateA = new Date(a.createdAt).getTime();
+        const dateB = new Date(b.createdAt).getTime();
+        return userSortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
+      }
+      return 0;
+    });
   }
 
   // --- REPORTS CALCULATION (Active Users) ---
@@ -691,11 +712,26 @@ export default function AdminDashboard() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50 dark:bg-slate-900 border-b border-gray-100 dark:border-slate-700">
-                  <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Nama</th>
+                  <th 
+                    className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+                    onClick={() => setUserSortConfig(prev => ({ key: 'nama', direction: prev?.key === 'nama' && prev.direction === 'asc' ? 'desc' : 'asc' }))}
+                  >
+                    Nama {userSortConfig?.key === 'nama' && (userSortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </th>
                   <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Kategori</th>
                   <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Detail</th>
-                  <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Total Kunjungan</th>
-                  <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Terdaftar Pada</th>
+                  <th 
+                    className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+                    onClick={() => setUserSortConfig(prev => ({ key: 'kunjungan', direction: prev?.key === 'kunjungan' && prev.direction === 'asc' ? 'desc' : 'asc' }))}
+                  >
+                    Total Kunjungan {userSortConfig?.key === 'kunjungan' && (userSortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th 
+                    className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+                    onClick={() => setUserSortConfig(prev => ({ key: 'tanggal', direction: prev?.key === 'tanggal' && prev.direction === 'asc' ? 'desc' : 'asc' }))}
+                  >
+                    Terdaftar Pada {userSortConfig?.key === 'tanggal' && (userSortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </th>
                   <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-gray-300 text-center">Aksi</th>
                 </tr>
               </thead>
