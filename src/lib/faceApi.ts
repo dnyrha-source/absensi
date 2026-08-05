@@ -114,3 +114,44 @@ export const compareEmbeddings = (descriptor1: number[], descriptor2: number[]) 
   // Return true if distance is below threshold (e.g. 0.6)
   return dist < 0.6;
 };
+
+export const calculateCentroid = (descriptors: number[][]): number[] => {
+  if (descriptors.length === 0) return [];
+  const dim = descriptors[0].length;
+  const centroid = new Array(dim).fill(0);
+  
+  for (let i = 0; i < dim; i++) {
+    let sum = 0;
+    for (let j = 0; j < descriptors.length; j++) {
+      sum += descriptors[j][i];
+    }
+    centroid[i] = sum / descriptors.length;
+  }
+  return centroid;
+};
+
+export const getBestDescriptors = (descriptors: number[][], countToKeep: number): number[] => {
+  if (descriptors.length <= countToKeep) {
+    return calculateCentroid(descriptors);
+  }
+
+  // 1. Calculate temporary centroid
+  const tempCentroid = calculateCentroid(descriptors);
+  const centroidFloat32 = new Float32Array(tempCentroid);
+
+  // 2. Calculate distance of each descriptor to the temporary centroid
+  const distances = descriptors.map((desc, index) => {
+    const dist = faceapi.euclideanDistance(new Float32Array(desc), centroidFloat32);
+    return { index, dist };
+  });
+
+  // 3. Sort by distance (closest first)
+  distances.sort((a, b) => a.dist - b.dist);
+
+  // 4. Keep the best `countToKeep` descriptors
+  const bestIndices = distances.slice(0, countToKeep).map(d => d.index);
+  const bestDescriptors = bestIndices.map(i => descriptors[i]);
+
+  // 5. Calculate final centroid from the best descriptors
+  return calculateCentroid(bestDescriptors);
+};

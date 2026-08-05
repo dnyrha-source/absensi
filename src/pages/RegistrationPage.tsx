@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { saveUser, addLog, getSettings, defaultSettings } from '../lib/db';
 import type { AppSettings } from '../lib/db';
 import { Loader2, Camera, CheckCircle2 } from 'lucide-react';
-import { loadRegistrationModels, getHighQualityFaceEmbedding } from '../lib/faceApi';
+import { loadRegistrationModels, getHighQualityFaceEmbedding, getBestDescriptors } from '../lib/faceApi';
 
 export type RegistrationForm = {
   nama: string;
@@ -21,6 +21,7 @@ export default function RegistrationPage() {
   const [isModelsLoaded, setIsModelsLoaded] = useState(false);
   const [faceEmbedding, setFaceEmbedding] = useState<number[] | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
+  const [captureProgress, setCaptureProgress] = useState(0);
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
   const videoRef = useRef<HTMLVideoElement>(null);
   const navigate = useNavigate();
@@ -92,20 +93,41 @@ export default function RegistrationPage() {
     }
     
     setIsCapturing(true);
+    setCaptureProgress(0);
+    
     try {
-      const { descriptor, error } = await getHighQualityFaceEmbedding(videoRef.current);
-      if (descriptor) {
-        setFaceEmbedding(descriptor);
-        // Stop camera after successful capture
-        if (videoRef.current.srcObject) {
-          const stream = videoRef.current.srcObject as MediaStream;
-          stream.getTracks().forEach(track => track.stop());
+      const capturedDescriptors: number[][] = [];
+      const TOTAL_FRAMES = 7;
+      
+      while (capturedDescriptors.length < TOTAL_FRAMES) {
+        const { descriptor, error } = await getHighQualityFaceEmbedding(videoRef.current);
+        
+        if (descriptor) {
+          capturedDescriptors.push(descriptor);
+          setCaptureProgress(capturedDescriptors.length);
+          
+          if (capturedDescriptors.length < TOTAL_FRAMES) {
+            // Wait 150ms between captures to get natural variation
+            await new Promise(resolve => setTimeout(resolve, 150));
+          }
+        } else {
+          // If any frame fails the quality check, abort the process
+          throw new Error(error || 'Wajah tidak memenuhi kriteria saat dipindai. Harap tahan posisi Anda.');
         }
-      } else {
-        alert(error || 'Wajah tidak memenuhi kriteria. Coba lagi.');
+      }
+
+      // 7 frames captured successfully, calculate best centroid
+      const bestCentroid = getBestDescriptors(capturedDescriptors, 5);
+      setFaceEmbedding(bestCentroid);
+      
+      // Stop camera after successful capture
+      if (videoRef.current.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream;
+        stream.getTracks().forEach(track => track.stop());
       }
     } catch (error: any) {
-      alert("Terjadi kesalahan saat mendeteksi wajah: " + error.message);
+      alert("Terjadi kesalahan atau wajah tidak ideal: " + error.message);
+      setCaptureProgress(0);
     } finally {
       setIsCapturing(false);
     }
@@ -202,7 +224,7 @@ export default function RegistrationPage() {
               {isCapturing ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Memindai Wajah HD...</span>
+                  <span>Memindai Wajah ({captureProgress}/7)...</span>
                 </>
               ) : (
                 <>
