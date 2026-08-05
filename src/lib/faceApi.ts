@@ -50,6 +50,17 @@ export const getFastFaceEmbedding = async (videoElement: HTMLVideoElement) => {
   
   if (!detection) return null;
   
+  // Calculate face area relative to the video frame to reject tiny background faces
+  const box = detection.detection.box;
+  const area = box.width * box.height;
+  const videoArea = videoElement.videoWidth * videoElement.videoHeight;
+  const facePercentage = (area / videoArea) * 100;
+
+  // Ignore faces that are too far away (less than 4.5% of the frame)
+  if (facePercentage < 4.5) {
+    return null;
+  }
+  
   // The face descriptor is a Float32Array of 128 values
   return Array.from(detection.descriptor);
 };
@@ -96,10 +107,10 @@ export const getHighQualityFaceEmbedding = async (videoElement: HTMLVideoElement
   }
 
   // 2. Check Face Distance / Size
-    if (facePercentage < 7) {
+    if (facePercentage < 4.5) {
       return { 
         descriptor: null, 
-        error: 'Posisi wajah terlalu jauh. Silakan dekatkan wajah Anda ke kamera hingga masuk ke dalam kotak acuan.' 
+        error: 'Posisi wajah terlalu jauh. Silakan dekatkan wajah Anda ke kamera.' 
       };
     }
   
