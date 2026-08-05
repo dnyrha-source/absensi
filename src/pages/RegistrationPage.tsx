@@ -97,7 +97,7 @@ export default function RegistrationPage() {
     
     try {
       const capturedDescriptors: number[][] = [];
-      const TOTAL_FRAMES = 7;
+      const TOTAL_FRAMES = 5; // Dikurangi dari 7 ke 5 agar lebih cepat
       
       while (capturedDescriptors.length < TOTAL_FRAMES) {
         const { descriptor, error } = await getHighQualityFaceEmbedding(videoRef.current);
@@ -105,19 +105,16 @@ export default function RegistrationPage() {
         if (descriptor) {
           capturedDescriptors.push(descriptor);
           setCaptureProgress(capturedDescriptors.length);
-          
-          if (capturedDescriptors.length < TOTAL_FRAMES) {
-            // Wait 150ms between captures to get natural variation
-            await new Promise(resolve => setTimeout(resolve, 150));
-          }
+          // Jeda buatan (150ms) dihapus karena proses AI (inferensi) sendiri sudah memakan waktu sekian milidetik, 
+          // sehingga jeda alaminya sudah cukup untuk mendapatkan variasi frame.
         } else {
           // If any frame fails the quality check, abort the process
           throw new Error(error || 'Wajah tidak memenuhi kriteria saat dipindai. Harap tahan posisi Anda.');
         }
       }
 
-      // 7 frames captured successfully, calculate best centroid
-      const bestCentroid = getBestDescriptors(capturedDescriptors, 5);
+      // 5 frames captured successfully, calculate best centroid from top 3 (discard 2 worst)
+      const bestCentroid = getBestDescriptors(capturedDescriptors, 3);
       setFaceEmbedding(bestCentroid);
       
       // Stop camera after successful capture
@@ -224,7 +221,7 @@ export default function RegistrationPage() {
               {isCapturing ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Memindai Wajah ({captureProgress}/7)...</span>
+                  <span>Memindai Wajah ({captureProgress}/5)...</span>
                 </>
               ) : (
                 <>
