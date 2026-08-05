@@ -105,8 +105,8 @@ export default function RegistrationPage() {
         if (descriptor) {
           capturedDescriptors.push(descriptor);
           setCaptureProgress(capturedDescriptors.length);
-          // Jeda buatan (150ms) dihapus karena proses AI (inferensi) sendiri sudah memakan waktu sekian milidetik, 
-          // sehingga jeda alaminya sudah cukup untuk mendapatkan variasi frame.
+          // Beri jeda 50ms agar browser bisa bernapas (render UI) dan tidak 'Page Unresponsive'
+          await new Promise(resolve => setTimeout(resolve, 50));
         } else {
           // If any frame fails the quality check, abort the process
           throw new Error(error || 'Wajah tidak memenuhi kriteria saat dipindai. Harap tahan posisi Anda.');

@@ -99,10 +99,10 @@ export const getHighQualityFaceEmbedding = async (videoElement: HTMLVideoElement
   const facePercentage = (maxArea / videoArea) * 100;
 
   // 1. Check Strict Confidence
-  if (largestDetection.detection.score < 0.85) {
+  if (largestDetection.detection.score < 0.75) {
     return { 
       descriptor: null, 
-      error: `Wajah kurang jelas/gelap (Skor: ${Math.round(largestDetection.detection.score * 100)}%). Syarat minimal 85%. Cari tempat terang & jangan bergerak.` 
+      error: `Wajah kurang jelas/gelap (Skor: ${Math.round(largestDetection.detection.score * 100)}%). Syarat minimal 75%. Cari tempat terang & jangan bergerak.` 
     };
   }
 
