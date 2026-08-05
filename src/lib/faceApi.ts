@@ -96,12 +96,12 @@ export const getHighQualityFaceEmbedding = async (videoElement: HTMLVideoElement
   }
 
   // 2. Check Face Distance / Size
-  if (facePercentage < 8) {
-    return { 
-      descriptor: null, 
-      error: 'Posisi HP terlalu jauh. Silakan dekatkan kamera ke wajah Anda.' 
-    };
-  }
+    if (facePercentage < 7) {
+      return { 
+        descriptor: null, 
+        error: 'Posisi wajah terlalu jauh. Silakan dekatkan wajah Anda ke kamera hingga masuk ke dalam kotak acuan.' 
+      };
+    }
   
   return { descriptor: Array.from(largestDetection.descriptor) };
 };
