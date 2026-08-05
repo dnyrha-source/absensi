@@ -148,6 +148,14 @@ export const getBestDescriptors = (descriptors: number[][], countToKeep: number)
   // 3. Sort by distance (closest first)
   distances.sort((a, b) => a.dist - b.dist);
 
+  // 3.5 Check for extreme outliers
+  const maxOutlier = distances[distances.length - 1].dist;
+  if (maxOutlier > 0.40) {
+    throw new Error('Terdeteksi pergerakan ekstrem atau perubahan wajah (Outlier > 0.40). Silakan ulangi dan tahan posisi Anda.');
+  } else if (maxOutlier > 0.25) {
+    console.warn(`Kualitas tangkapan sedang (Max Outlier: ${maxOutlier.toFixed(2)}). Melanjutkan dengan membuang frame buruk.`);
+  }
+
   // 4. Keep the best `countToKeep` descriptors
   const bestIndices = distances.slice(0, countToKeep).map(d => d.index);
   const bestDescriptors = bestIndices.map(i => descriptors[i]);
