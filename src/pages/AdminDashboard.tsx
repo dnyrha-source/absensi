@@ -268,6 +268,25 @@ export default function AdminDashboard() {
     link.click();
   };
 
+  const handleExportUsersCSV = () => {
+    if (filteredUsers.length === 0) return alert('Tidak ada data pengguna untuk diexport');
+    
+    const headers = ['Nama', 'Kategori', 'Detail', 'Total Kunjungan', 'Terdaftar Pada'];
+    const csvContent = [
+      headers.join(','),
+      ...filteredUsers.map(u => {
+        const detail = u.kategori === 'Siswa' ? (u.kelas || '') : (u.bagian || u.unit || u.jabatan || '');
+        return `"${u.nama}","${u.kategori}","${detail}","${getUserVisitCount(u.id)}","${new Date(u.createdAt).toLocaleDateString()}"`;
+      })
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `Master_Data_Pengunjung.csv`;
+    link.click();
+  };
+
   const handleDeleteUser = async (id: string) => {
     if (confirm('Apakah Anda yakin ingin menghapus user ini? Semua data log kunjungannya juga akan terhapus.')) {
       setIsLoading(true);
@@ -397,6 +416,11 @@ export default function AdminDashboard() {
           <div className="flex items-center gap-3">
             {activeTab === 'logs' && (
               <button onClick={handleExportCSV} className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors text-sm font-medium shadow-sm">
+                <FileSpreadsheet className="w-4 h-4" /> <span className="hidden sm:inline">Export CSV</span>
+              </button>
+            )}
+            {activeTab === 'users' && (
+              <button onClick={handleExportUsersCSV} className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors text-sm font-medium shadow-sm">
                 <FileSpreadsheet className="w-4 h-4" /> <span className="hidden sm:inline">Export CSV</span>
               </button>
             )}
