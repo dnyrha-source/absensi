@@ -30,6 +30,7 @@ export type AppSettings = {
   unit: string[];
   bagian: string[];
   jabatan: string[];
+  rfidKbtk?: string;
 };
 
 export const defaultSettings: AppSettings = {
@@ -39,7 +40,8 @@ export const defaultSettings: AppSettings = {
   kelasSMA: ['10A','10B','10C','10D','10E','10F','10G','10H','11A','11B','11C','11D','11E','11F','11G','11H','12A','12B','12C','12D','12E','12F','12G','12H'],
   unit: ['KB/TK', 'SMP', 'SMA'],
   bagian: ['Tata Usaha', 'Keamanan', 'Kebersihan', 'Perlengkapan'],
-  jabatan: ['Kepala Sekolah', 'Wakil Kepala Sekolah', 'Staf']
+  jabatan: ['Kepala Sekolah', 'Wakil Kepala Sekolah', 'Staf'],
+  rfidKbtk: ''
 };
 
 export const initDb = async () => {

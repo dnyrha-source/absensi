@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { loadScanModels, getFastFaceEmbedding } from '../lib/faceApi';
-import { getUsers, addLog } from '../lib/db';
-import type { User } from '../lib/db';
+import { getUsers, addLog, getSettings } from '../lib/db';
+import type { User, AppSettings } from '../lib/db';
 import * as faceapi from '@vladmandic/face-api';
 
 export default function ScanPage() {
@@ -25,6 +25,10 @@ export default function ScanPage() {
   const navigate = useNavigate();
 
   const [usersList, setUsersList] = useState<User[]>([]);
+  const [appSettings, setAppSettings] = useState<AppSettings | null>(null);
+  const [showKidsTheme, setShowKidsTheme] = useState(false);
+  const rfidBuffer = useRef<string>('');
+  const rfidTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -36,6 +40,8 @@ export default function ScanPage() {
         // Fetch users in advance for faster scanning comparison
         const users = await getUsers();
         setUsersList(users);
+        const settings = await getSettings();
+        setAppSettings(settings);
       } catch (e: any) {
         alert("Gagal memuat model AI atau Database: " + e.message);
       }
@@ -104,6 +110,65 @@ export default function ScanPage() {
   useEffect(() => { successDataRef.current = successData; }, [successData]);
   useEffect(() => { unregisteredFaceRef.current = unregisteredFace; }, [unregisteredFace]);
 
+  // Handle RFID input
+  useEffect(() => {
+    const handleKeyDown = async (e: KeyboardEvent) => {
+      // Ignore if user is typing in an input field
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      if (e.key === 'Enter') {
+        const uid = rfidBuffer.current.trim();
+        rfidBuffer.current = '';
+        
+        if (appSettings?.rfidKbtk && uid === appSettings.rfidKbtk) {
+          triggerKidsTheme();
+        }
+      } else {
+        // Only accept alphanumeric characters for RFID
+        if (/^[a-zA-Z0-9]$/.test(e.key)) {
+          rfidBuffer.current += e.key;
+        }
+        
+        // Clear buffer if no input for 1 second (prevent stray keystrokes from piling up)
+        if (rfidTimeout.current) clearTimeout(rfidTimeout.current);
+        rfidTimeout.current = setTimeout(() => {
+          rfidBuffer.current = '';
+        }, 1000);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [appSettings]);
+
+  const triggerKidsTheme = async () => {
+    if (isScanningRef.current || successDataRef.current || showKidsTheme) return;
+    
+    isScanningRef.current = true;
+    setShowKidsTheme(true);
+    
+    // Log anonymous KBTK attendance
+    try {
+      // Just add a log with a generic "KBTK_VISITOR" ID so it counts in the global logs
+      await addLog('KBTK_VISITOR_LOG');
+    } catch (e) {
+      console.log('Failed to add KBTK log', e);
+    }
+    
+    // Play text to speech
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance('Selamat datang, siswa KBTK Labschool!');
+      utterance.lang = 'id-ID';
+      utterance.rate = 0.9; // Slightly slower for kids
+      window.speechSynthesis.speak(utterance);
+    }
+    
+    setTimeout(() => {
+      setShowKidsTheme(false);
+      isScanningRef.current = false;
+    }, 4000);
+  };
+
   useEffect(() => {
     if (!isModelsLoaded) return;
     
@@ -112,7 +177,7 @@ export default function ScanPage() {
       if (!active) return;
       
       // Only scan if not currently scanning, showing success, or showing unregistered modal
-      if (!isScanningRef.current && !successDataRef.current && !unregisteredFaceRef.current) {
+      if (!isScanningRef.current && !successDataRef.current && !unregisteredFaceRef.current && !showKidsTheme) {
         await handleAutoScan();
       }
       
@@ -337,6 +402,32 @@ export default function ScanPage() {
             >
               Tutup
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Kids Theme Modal */}
+      {showKidsTheme && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-yellow-400/90 backdrop-blur-md overflow-hidden">
+          {/* Confetti / Balloons Background Elements */}
+          <div className="absolute top-10 left-10 text-6xl animate-bounce" style={{ animationDelay: '0.1s' }}>🎈</div>
+          <div className="absolute top-20 right-10 text-6xl animate-bounce" style={{ animationDelay: '0.3s' }}>🎈</div>
+          <div className="absolute bottom-20 left-20 text-6xl animate-bounce" style={{ animationDelay: '0.5s' }}>🌟</div>
+          <div className="absolute bottom-10 right-20 text-6xl animate-bounce" style={{ animationDelay: '0.2s' }}>🎊</div>
+          
+          <div className="bg-white rounded-[3rem] p-8 max-w-md w-full shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex flex-col items-center text-center animate-popup border-8 border-pink-400 relative z-10">
+            <div className="w-32 h-32 bg-yellow-100 rounded-full flex items-center justify-center mb-6 shadow-inner border-4 border-yellow-300">
+              <span className="text-6xl animate-pulse">🧸</span>
+            </div>
+            
+            <h3 className="text-4xl font-extrabold text-pink-500 mb-4 tracking-wider" style={{ textShadow: '2px 2px 0px #fcd34d' }}>HORE!</h3>
+            <p className="text-2xl font-bold text-blue-500 mb-6 leading-tight">Selamat Datang,<br/>Adik KBTK Labschool!</p>
+            
+            <div className="flex gap-2 mb-2">
+              <span className="text-3xl animate-spin" style={{ animationDuration: '3s' }}>⭐</span>
+              <span className="text-3xl animate-spin" style={{ animationDuration: '2s' }}>⭐</span>
+              <span className="text-3xl animate-spin" style={{ animationDuration: '4s' }}>⭐</span>
+            </div>
           </div>
         </div>
       )}
