@@ -67,7 +67,7 @@ export default function ScanPage() {
       .catch((err) => console.error("Error accessing webcam:", err));
   };
 
-  const playSound = (type: 'success' | 'error' | 'cooldown') => {
+  const playSound = (type: 'success' | 'error' | 'cooldown' | 'kidsTheme') => {
     try {
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
       if (!AudioContextClass) return;
@@ -101,6 +101,12 @@ export default function ScanPage() {
       } else if (type === 'cooldown') {
         // Single quick neutral ding
         playNote(440, 0, 0.1, 'triangle');
+      } else if (type === 'kidsTheme') {
+        // Magical upward chime (C5 -> E5 -> G5 -> C6)
+        playNote(523.25, 0, 0.15, 'sine');
+        playNote(659.25, 0.1, 0.15, 'sine');
+        playNote(783.99, 0.2, 0.15, 'sine');
+        playNote(1046.50, 0.3, 0.4, 'sine');
       }
     } catch (e) {
       console.log("Audio not supported or blocked", e);
@@ -160,32 +166,8 @@ export default function ScanPage() {
       console.log('Failed to add KBTK log', e);
     }
     
-    // Play text to speech
-    if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance('Hore! Selamat datang adik-adik KBTK Labschool!');
-      utterance.lang = 'id-ID';
-      utterance.rate = 1.0;
-      utterance.pitch = 1.6; // High pitch to sound cute/cartoonish
-      
-      // Try to find a better voice if available
-      const voices = window.speechSynthesis.getVoices();
-      const idVoices = voices.filter(v => v.lang.includes('id'));
-      
-      // Look for Google's Indonesian voice (usually sounds much better)
-      const googleVoice = idVoices.find(v => v.name.includes('Google'));
-      // Or any voice that explicitly says female
-      const femaleVoice = idVoices.find(v => v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('ayu'));
-      
-      if (googleVoice) {
-        utterance.voice = googleVoice;
-      } else if (femaleVoice) {
-        utterance.voice = femaleVoice;
-      } else if (idVoices.length > 0) {
-        utterance.voice = idVoices[0];
-      }
-      
-      window.speechSynthesis.speak(utterance);
-    }
+    // Play cute sound instead of TTS
+    playSound('kidsTheme');
     
     setTimeout(() => {
       setShowKidsTheme(false);
