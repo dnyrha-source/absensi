@@ -27,6 +27,7 @@ export default function ScanPage() {
   const [usersList, setUsersList] = useState<User[]>([]);
   const [appSettings, setAppSettings] = useState<AppSettings | null>(null);
   const [showKidsTheme, setShowKidsTheme] = useState(false);
+  const [debugLastRfid, setDebugLastRfid] = useState<string>('');
   const rfidBuffer = useRef<string>('');
   const rfidTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -119,13 +120,17 @@ export default function ScanPage() {
       if (e.key === 'Enter') {
         const uid = rfidBuffer.current.trim();
         rfidBuffer.current = '';
+        console.log("RFID Scanned:", uid, "Expected:", appSettings?.rfidKbtk);
+        setDebugLastRfid(uid);
         
         if (appSettings?.rfidKbtk && uid === appSettings.rfidKbtk) {
           triggerKidsTheme();
+        } else if (uid.length > 0 && (!appSettings?.rfidKbtk || uid !== appSettings.rfidKbtk)) {
+          console.warn("RFID did not match");
         }
       } else {
-        // Only accept alphanumeric characters for RFID
-        if (/^[a-zA-Z0-9]$/.test(e.key)) {
+        // Allow common characters from RFID readers
+        if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
           rfidBuffer.current += e.key;
         }
         
@@ -373,6 +378,12 @@ export default function ScanPage() {
             <span>Auto Scan Aktif (Idle)</span>
           </>
         )}
+      </div>
+
+      {/* Debug Info */}
+      <div className="mt-4 text-xs text-gray-400">
+        Last RFID read: {debugLastRfid ? debugLastRfid : 'none'} <br/>
+        Target: {appSettings?.rfidKbtk || 'not set'}
       </div>
 
       {/* Modern Success Modal */}
