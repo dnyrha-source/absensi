@@ -31,6 +31,7 @@ export type AppSettings = {
   bagian: string[];
   jabatan: string[];
   rfidKbtk?: string;
+  mirrorCamera?: boolean;
 };
 
 export const defaultSettings: AppSettings = {
@@ -41,7 +42,8 @@ export const defaultSettings: AppSettings = {
   unit: ['KB/TK', 'SMP', 'SMA'],
   bagian: ['Tata Usaha', 'Keamanan', 'Kebersihan', 'Perlengkapan'],
   jabatan: ['Kepala Sekolah', 'Wakil Kepala Sekolah', 'Staf'],
-  rfidKbtk: ''
+  rfidKbtk: '',
+  mirrorCamera: true
 };
 
 export const initDb = async () => {

@@ -175,7 +175,7 @@ export default function RegistrationPage() {
                   autoPlay 
                   playsInline 
                   muted 
-                  className="w-full h-full object-cover mirror"
+                  className={`w-full h-full object-cover ${settings.mirrorCamera !== false ? 'mirror' : ''}`}
                 />
                 {!isModelsLoaded ? (
                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/80 backdrop-blur-sm z-10 text-white">

@@ -320,7 +320,7 @@ export default function ScanPage() {
           autoPlay 
           playsInline
           muted
-          className="w-full h-full object-cover transform -scale-x-100 transition-opacity duration-500 opacity-90 group-hover:opacity-100"
+          className={`w-full h-full object-cover transition-opacity duration-500 opacity-90 group-hover:opacity-100 ${appSettings?.mirrorCamera !== false ? 'transform -scale-x-100' : ''}`}
         />
 
         {/* Futuristic Corners */}
