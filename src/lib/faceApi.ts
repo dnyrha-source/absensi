@@ -11,7 +11,7 @@ export const loadScanModels = async () => {
     
     await Promise.all([
       faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-      faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL),
+      faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
       faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
     ]);
     console.log('Scan Face API Models loaded successfully');
@@ -45,7 +45,7 @@ export const getFastFaceEmbedding = async (videoElement: HTMLVideoElement) => {
   const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 });
   
   const detection = await faceapi.detectSingleFace(videoElement, options)
-    .withFaceLandmarks(true) // use tiny landmark net
+    .withFaceLandmarks(false) // USE STANDARD LANDMARK FOR PERFECT ALIGNMENT MATCH
     .withFaceDescriptor();
   
   if (!detection) return null;
