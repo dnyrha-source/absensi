@@ -10,7 +10,7 @@ export const loadScanModels = async () => {
     await faceapi.tf.ready();
     
     await Promise.all([
-      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+      faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
       faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
       faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
     ]);
@@ -42,7 +42,8 @@ export const loadRegistrationModels = async () => {
 };
 
 export const getFastFaceEmbedding = async (videoElement: HTMLVideoElement) => {
-  const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 });
+  // Gunakan SSD persis seperti registrasi agar 100% sama (Apples to Apples murni)
+  const options = new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 });
   
   const detection = await faceapi.detectSingleFace(videoElement, options)
     .withFaceLandmarks(false) // USE STANDARD LANDMARK FOR PERFECT ALIGNMENT MATCH
