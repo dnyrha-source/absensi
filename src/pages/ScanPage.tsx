@@ -200,8 +200,8 @@ export default function ScanPage() {
     if (!videoRef.current || videoRef.current.videoWidth === 0) return;
     
     try {
-      // 1. Lightweight detection first (Idle mode) - Diganti SSD agar tidak error
-      const options = new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 });
+      // 1. Lightweight detection first (Idle mode) - KEMBALI MENGGUNAKAN TINY AGAR BROWSER TIDAK HANG (PAGE UNRESPONSIVE)
+      const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 160, scoreThreshold: 0.3 });
       const detection = await faceapi.detectSingleFace(videoRef.current, options);
       
       if (!detection) {
