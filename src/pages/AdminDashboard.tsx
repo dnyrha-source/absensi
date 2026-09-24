@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Users, User as UserIcon, GraduationCap, Building2, Briefcase, FileSpreadsheet, Edit, Trash2, X, BarChart3, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Users, User as UserIcon, GraduationCap, Building2, Briefcase, FileSpreadsheet, Edit, Trash2, X, BarChart3, ChevronLeft, ChevronRight, ArrowUpCircle, Upload } from 'lucide-react';
 import { getUsers, getLogs, updateUser, deleteUser, getSettings, saveSettings, defaultSettings } from '../lib/db';
 import type { User, AttendanceLog, AppSettings } from '../lib/db';
 
@@ -364,6 +364,80 @@ export default function AdminDashboard() {
     );
   }
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAutoPromotionSMA = async () => {
+    const confirmPromote = window.confirm("PERINGATAN: Aksi ini akan menaikkan kelas semua siswa SMA (10->11, 11->12) dan MENGHAPUS semua siswa kelas 12 dari database secara permanen. Lanjutkan?");
+    if (!confirmPromote) return;
+
+    try {
+      const smaUsers = users.filter(u => u.kategori === 'Siswa' && u.jenjang === 'SMA' && u.kelas);
+      let countUpdated = 0;
+      let countDeleted = 0;
+
+      for (const u of smaUsers) {
+        if (!u.kelas) continue;
+        
+        if (u.kelas.startsWith('12')) {
+          await deleteUser(u.id);
+          countDeleted++;
+        } else if (u.kelas.startsWith('11')) {
+          const newKelas = u.kelas.replace('11', '12');
+          await updateUser({ ...u, kelas: newKelas });
+          countUpdated++;
+        } else if (u.kelas.startsWith('10')) {
+          const newKelas = u.kelas.replace('10', '11');
+          await updateUser({ ...u, kelas: newKelas });
+          countUpdated++;
+        }
+      }
+      
+      alert(`Berhasil! ${countUpdated} siswa SMA dinaikkan kelasnya, dan ${countDeleted} siswa kelas 12 dihapus (Lulus).`);
+      loadData();
+    } catch (err) {
+      alert("Terjadi kesalahan: " + (err as Error).message);
+    }
+  };
+
+  const handleCsvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const text = event.target?.result as string;
+      const lines = text.split('\n');
+      
+      let updateCount = 0;
+      let notFoundCount = 0;
+
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        
+        // Split by comma
+        const parts = line.split(',');
+        if (parts.length >= 2) {
+          const nama = parts[0].trim();
+          const kelas = parts[1].trim();
+          
+          const userObj = users.find(u => u.nama.toLowerCase() === nama.toLowerCase());
+          if (userObj) {
+            await updateUser({ ...userObj, kelas });
+            updateCount++;
+          } else {
+            notFoundCount++;
+          }
+        }
+      }
+      
+      alert(`Proses Selesai!\nBerhasil diupdate: ${updateCount} murid.\nTidak ditemukan di sistem (nama tidak cocok): ${notFoundCount} baris.`);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      loadData();
+    };
+    reader.readAsText(file);
+  };
+
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-slate-900 overflow-hidden w-full">
       
@@ -669,8 +743,24 @@ export default function AdminDashboard() {
       {activeTab === 'users' && (
         <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 shadow-sm overflow-hidden">
           <div className="p-6 border-b border-gray-100 dark:border-slate-700">
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-4">
               <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Master Data Pengunjung Terdaftar ({filteredUsers.length})</h3>
+              <div className="flex flex-wrap gap-2">
+                <button onClick={handleAutoPromotionSMA} className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg flex items-center gap-1 transition-colors">
+                  <ArrowUpCircle className="w-4 h-4" /> Naik Kelas SMA
+                </button>
+                <input 
+                  type="file" 
+                  accept=".csv" 
+                  ref={fileInputRef} 
+                  onChange={handleCsvUpload} 
+                  className="hidden" 
+                  id="csv-upload"
+                />
+                <label htmlFor="csv-upload" className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm rounded-lg flex items-center gap-1 transition-colors cursor-pointer">
+                  <Upload className="w-4 h-4" /> Update Kelas via CSV
+                </label>
+              </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
