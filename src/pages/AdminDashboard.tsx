@@ -7,6 +7,7 @@ export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Tab State
   const [activeTab, setActiveTab] = useState<'logs' | 'users' | 'settings' | 'reports'>('logs');
@@ -364,7 +365,6 @@ export default function AdminDashboard() {
     );
   }
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAutoPromotionSMA = async () => {
     const confirmPromote = window.confirm("PERINGATAN: Aksi ini akan menaikkan kelas semua siswa SMA (10->11, 11->12) dan MENGHAPUS semua siswa kelas 12 dari database secara permanen. Lanjutkan?");
